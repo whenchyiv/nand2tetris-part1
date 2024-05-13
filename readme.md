@@ -1,4 +1,4 @@
-# Nand2Tetris Part 1: Hardware
+# The Elements of Computing Systems Part 1: Hardware
 
 A virtual von Nuemann machine from scratch. Completed while sleep deprived on paternity leave.
 
