@@ -64,6 +64,10 @@ class Parser(object):
             raise ValueError(
                 f"Unknown command {self._arg1_tokens[0]} at position 1 for line {self.current_line + 1}."
             )
+        except IndexError:
+            raise ValueError(
+                f"Missing command at position 1 for line {self.current_line + 1}."
+            )
 
     @property
     def arg2(self):
