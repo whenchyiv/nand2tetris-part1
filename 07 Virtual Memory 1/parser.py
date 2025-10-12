@@ -116,6 +116,7 @@ class Parser(object):
                 raise ValueError(
                     f"Missing command type for command {self._arg2_tokens[0]} at position 2 for line {self.current_line + 1}. This is likely a Parser bug."
                 )
+        # Parser spec specifies that we should only return the command for these command types.
         if command_type in ["C_PUSH", "C_POP", "C_FUNCTION", "C_CALL"]:
             return token
         return None
