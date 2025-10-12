@@ -18,7 +18,7 @@ from textwrap import dedent
 @dataclass
 class CommandTypes:
     """Dataclass containing string mappings of command types to avoid typos and
-    allow for quick reference."""
+    allow for quick reference. Not the most performant option, but makes my life easier."""
 
     push: str = "C_PUSH"
     pop: str = "C_POP"
