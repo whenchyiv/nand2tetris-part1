@@ -67,6 +67,8 @@ class Parser(object):
 
     @property
     def arg2(self):
+        if len(self._arg2_tokens) == 0:
+            return None
         try:
             return self._commands[self._arg2_tokens[0]]
         except KeyError:
@@ -94,6 +96,12 @@ class Parser(object):
         """Load the lines of the file and prepare for parsing."""
         with open(self.filename, "r") as file:
             # Store the lines in a list, stripping out extra chars (indents, newlines, etc.).
+            for line in file.readlines():
+                stripped_line = dedent(line.strip())
+                if (
+                    len(stripped_line) > 0 and line[:2] != "//"
+                ):  # Ignore blank lines and comments (lines that start with "//")
+                    self.lines.append(stripped_line)
             self.lines = [dedent(line.strip()) for line in file.readlines()]
             self.total_lines = len(self.lines)
 
