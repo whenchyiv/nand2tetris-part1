@@ -1,3 +1,15 @@
+"""
+VM Parser for the Hack VM language. See The Elements of Computing Systems chapter 7 for details.
+
+Call with a --filename argument for the .vm file to parse. Defaults to the current directory
+if the filename does not include a path.
+
+VM files must have a .vm extension, and have the first letter of the filename capitalized (e.g. FileName.vm).
+
+Author: Will Henchy
+Date: 2025-10-12
+"""
+
 import argparse
 from dataclasses import dataclass
 from textwrap import dedent
@@ -19,8 +31,8 @@ class Parser(object):
         filename (str): The name of the file being parsed. Defaults to the current directory.
         lines (list[str]): A list of all lines in the file.
         command_type (str): The current command's type. Types defined in the CommandTypes class.
-        arg1 (str): The current line's arg1.
-        arg2 (str): The current line's arg2.
+        arg1 (str | None): The current line's arg1.
+        arg2 (str | None): The current line's arg2.
         has_more_lines (bool): Does the file have more lines to parse?
         current_line (int): The line number currently being parsed.
         total_lines (int): The total number of lines in the file.
@@ -58,8 +70,13 @@ class Parser(object):
 
     @property
     def arg1(self):
+        """Return the first argument for the current command.
+        If the command is a Return command, returns None instead."""
+        command_type: str | None = None
+        token: str | None = None
         try:
-            return self._commands[self._arg1_tokens[0]]
+            token = self._arg1_tokens[0]
+            command_type = self._commands[token]
         except KeyError:
             raise ValueError(
                 f"Unknown command {self._arg1_tokens[0]} at position 1 for line {self.current_line + 1}."
@@ -68,17 +85,40 @@ class Parser(object):
             raise ValueError(
                 f"Missing command at position 1 for line {self.current_line + 1}."
             )
+        finally:
+            if not command_type:
+                raise ValueError(
+                    f"Missing command type for command {self._arg1_tokens[0]} at position 1 for line {self.current_line + 1}. This is likely a Parser bug."
+                )
+        # Only return the command type if the command is not a return command.
+        if command_type == "C_RETURN":
+            return None
+        else:
+            return token
 
     @property
     def arg2(self):
+        """Return the second argument for the current command if the command is a Push,
+        Pop, Function, or Call command. Returns None otherwise."""
+        command_type: str | None = None
+        token: str | None = None
         if len(self._arg2_tokens) == 0:
             return None
         try:
-            return self._commands[self._arg2_tokens[0]]
+            token = self._arg2_tokens[0]
+            command_type = self._commands[token]
         except KeyError:
             raise ValueError(
                 f"Invalid command {self._arg2_tokens[0]} at position 2 for line {self.current_line + 1}."
             )
+        finally:
+            if not command_type:
+                raise ValueError(
+                    f"Missing command type for command {self._arg2_tokens[0]} at position 2 for line {self.current_line + 1}. This is likely a Parser bug."
+                )
+        if command_type in ["C_PUSH", "C_POP", "C_FUNCTION", "C_CALL"]:
+            return token
+        return None
 
     def __init__(self, filename: str | None):
         if not filename:
