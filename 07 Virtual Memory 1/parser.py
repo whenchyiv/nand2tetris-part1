@@ -13,6 +13,7 @@ Date: 2025-10-12
 import argparse
 from dataclasses import dataclass
 from textwrap import dedent
+import os
 
 
 @dataclass
@@ -25,26 +26,38 @@ class CommandTypes:
     arithmetic: str = "C_ARITHMETIC"
 
 
+@dataclass
+class ParsedCommand:
+    """Used for dot acccess to arg1/arg2 when iterating over the Parser object."""
+
+    command_type: str
+    arg1: str | None = None
+    arg2: str | None = None
+
+
 class Parser(object):
     """Parser for the Hack VM language. Requires a filename param on init (Parser(filename='')).
+    Iterate over lines with a for loop, accessing arg1 and arg2 with .arg1 and .arg2 and command_type
+    with .command_type.
+
     Attributes:
         filename (str): The name of the file being parsed. Defaults to the current directory.
         lines (list[str]): A list of all lines in the file.
-        command_type (str): The current command's type. Types defined in the CommandTypes class.
-        arg1 (str | None): The current line's arg1.
-        arg2 (str | None): The current line's arg2.
         has_more_lines (bool): Does the file have more lines to parse?
         current_line (int): The line number currently being parsed.
         total_lines (int): The total number of lines in the file.
+
+    Iterable attributes:
+        command_type (str): The current command's type. Types defined in the CommandTypes class.
+        arg1 (str | None): The current line's arg1.
+        arg2 (str | None): The current line's arg2.
     """
 
     filename: str
-    lines: list[str]
-    command_type: str
+    lines: list[str] = list()
     current_line: int = 0
     total_lines: int = 0
-    _arg1_tokens: list[str]
-    _arg2_tokens: list[str]
+    _line_tokens: list[str]
     _command_types: CommandTypes = CommandTypes()
     _commands: dict[str, str] = {
         "push": _command_types.push,
@@ -69,73 +82,63 @@ class Parser(object):
             return False
 
     @property
-    def arg1(self):
-        """Return the first argument for the current command.
-        If the command is a Return command, returns None instead."""
+    def _command_type(self):
         command_type: str | None = None
         token: str | None = None
         try:
-            token = self._arg1_tokens[0]
+            token = self._line_tokens[0]
             command_type = self._commands[token]
         except KeyError:
             raise ValueError(
-                f"Unknown command {self._arg1_tokens[0]} at position 1 for line {self.current_line + 1}."
+                f"Unknown command at position 0 for line {self.current_line + 1}: {self._line_tokens}"
             )
-        except IndexError:
+        if not command_type:
             raise ValueError(
-                f"Missing command at position 1 for line {self.current_line + 1}."
+                f"Missing command type for command {self._arg1_tokens[0]} at position 1 for line {self.current_line + 1}. This is likely a Parser bug."
             )
-        finally:
-            if not command_type:
-                raise ValueError(
-                    f"Missing command type for command {self._arg1_tokens[0]} at position 1 for line {self.current_line + 1}. This is likely a Parser bug."
-                )
-        # Only return the command type if the command is not a return command.
-        if command_type == "C_RETURN":
-            return None
-        else:
-            return token
+        return command_type
 
     @property
-    def arg2(self):
+    def _arg1(self) -> str | None:
+        """Return the first argument for the current command.
+        If the command is a Return command, returns None instead."""
+        try:
+            if self._command_type == "C_RETURN":
+                return None
+            elif self._command_type == "C_ARITHMETIC":
+                return self._line_tokens[0]
+            else:
+                return self._line_tokens[1]
+        except:
+            print(
+                f"Error parsing arg1 for line {self.current_line + 1}: {self._line_tokens}"
+            )
+
+    @property
+    def _arg2(self) -> str | None:
         """Return the second argument for the current command if the command is a Push,
         Pop, Function, or Call command. Returns None otherwise."""
-        command_type: str | None = None
-        token: str | None = None
-        if len(self._arg2_tokens) == 0:
-            return None
         try:
-            token = self._arg2_tokens[0]
-            command_type = self._commands[token]
+            if self._command_type in ["C_PUSH", "C_POP", "C_FUNCTION", "C_CALL"]:
+                return self._line_tokens[2]
+            else:
+                return None
         except KeyError:
             raise ValueError(
-                f"Invalid command {self._arg2_tokens[0]} at position 2 for line {self.current_line + 1}."
-            )
-        finally:
-            if not command_type:
-                raise ValueError(
-                    f"Missing command type for command {self._arg2_tokens[0]} at position 2 for line {self.current_line + 1}. This is likely a Parser bug."
-                )
-        # Parser spec specifies that we should only return the command for these command types.
-        if command_type in ["C_PUSH", "C_POP", "C_FUNCTION", "C_CALL"]:
-            return token
-        return None
-
-    def __init__(self, filename: str | None):
-        if not filename:
-            raise ValueError("No filename provided to Parser() init.")
-
-        # Check against VM filename specs
-        if ".vm" not in filename:
-            raise ValueError("Filename must be a .vm file.")
-        if filename[0].isupper() is False:
-            raise ValueError(
-                'Filename must begin with a capital letter (e.g. "FileName.vm").'
+                f"Invalid command at position 3 for line {self.current_line + 1}: {self._line_tokens}"
             )
 
-        # Load and parse the vm file
-        self.filename = filename
+    @property
+    def _parsed_lines(self):
         self._load_lines()
+        parsed_args = list()
+        while self.has_more_lines:
+            self._parse_line()
+            parsed_args.append(
+                ParsedCommand(self._command_type, self._arg1, self._arg2)
+            )
+            self.advance()
+        return parsed_args
 
     def _load_lines(self):
         """Load the lines of the file and prepare for parsing."""
@@ -147,24 +150,22 @@ class Parser(object):
                     len(stripped_line) > 0 and line[:2] != "//"
                 ):  # Ignore blank lines and comments (lines that start with "//")
                     self.lines.append(stripped_line)
-            self.lines = [dedent(line.strip()) for line in file.readlines()]
+            self.lines = [dedent(line.strip()) for line in self.lines]
             self.total_lines = len(self.lines)
 
     def _parse_line(self):
         """Parse the current line and store the arg1 and arg2 tokens for access."""
         line: str = self.lines[self.current_line]
         tokens: list[str] = line.split(" ")
+        self._line_tokens: list[str] = []
         self._arg1_tokens: list[str] = []
         self._arg2_tokens: list[str] = []
         for idx, t in enumerate(tokens):
-            if idx == 0:
-                self._arg1_tokens.append(t)
-            else:
-                if idx > 2:
-                    raise ValueError(
-                        f"Too many commands and arguments in line {self.current_line + 1}."
-                    )
-                self._arg2_tokens.append(t)
+            self._line_tokens.append(t)
+            if idx > 2:
+                raise ValueError(
+                    f"Too many commands and arguments in line {self.current_line + 1}."
+                )
 
     def advance(self):
         if self.has_more_lines:
@@ -173,6 +174,31 @@ class Parser(object):
         else:
             raise IndexError("Cannot advance past the max line index.")
 
+    def __init__(self, filename: str | None):
+        if not filename:
+            raise ValueError("No filename provided to Parser() init.")
+
+        basename = os.path.basename(filename)  # Check against VM filename specs
+        if ".vm" not in basename:
+            raise ValueError("Filename must be a .vm file.")
+        if basename[0].isupper() is False:
+            raise ValueError(
+                'Filename must begin with a capital letter (e.g. "FileName.vm").'
+            )
+
+        # Load and parse the vm file
+        self.filename = filename
+        self._load_lines()
+
+    def __iter__(self):
+        return iter(self._parsed_lines)
+
+    def __len__(self):
+        return len(self._parsed_lines)
+
+    def __repr__(self):
+        return f"Parser(filename={self.filename}): {self.lines}"
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Hack VM parser.")
@@ -180,5 +206,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     filename = args.filename
 
-    with open(filename, "r") as file:
-        print(file)
+    parser = Parser(filename)
+    print(parser)
+    for line in parser:
+        print(f"{line.command_type}: {line.arg1} {line.arg2}")
