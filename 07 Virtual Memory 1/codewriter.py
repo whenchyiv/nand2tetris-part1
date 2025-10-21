@@ -81,7 +81,7 @@ class CodeWriter(object):
         line_count: int = 0
         with open(self.output_filename, "w") as file:
             for line, token_list in self._parser:
-                if debug:  # Include VM tokens as a comment for debugging if requested.
+                if debug:  # Include VM tokens as a comment for debugging if requested via the debug var.
                     file.write(f"//{' '.join(token_list)}\n")
                 if (
                     line.command_type == self._command_types.push
