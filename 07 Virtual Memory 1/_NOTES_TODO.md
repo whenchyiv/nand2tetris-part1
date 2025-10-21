@@ -4,4 +4,6 @@
 
 - [ ] write automated tests for the parser.py
 - [ ] codewriter module
+    - [ ] arithmetic asm generation
+    - [x] push/pop asm generation
 - [x] Create main script that calls into the codewriter and runs the whole thing (interpres.py)
