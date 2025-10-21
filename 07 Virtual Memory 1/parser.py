@@ -191,10 +191,14 @@ class Parser(object):
         self._load_lines()
 
     def __iter__(self):
-        return iter(self._parsed_lines)
+        self._load_lines()
+        while self.has_more_lines:
+            self._parse_line()
+            yield ParsedCommand(self._command_type, self._arg1, self._arg2)
+            self.advance()
 
     def __len__(self):
-        return len(self._parsed_lines)
+        return self.total_lines
 
     def __repr__(self):
         return f"Parser(filename={self.filename}): {self.lines}"
