@@ -24,6 +24,9 @@ class CommandTypes:
     push: str = "C_PUSH"
     pop: str = "C_POP"
     arithmetic: str = "C_ARITHMETIC"
+    rtrn: str = "C_RETURN"
+    function: str = "C_FUNCTION"
+    call: str = "C_CALL"
 
 
 @dataclass
@@ -103,9 +106,9 @@ class Parser(object):
         """Return the first argument for the current command.
         If the command is a Return command, returns None instead."""
         try:
-            if self._command_type == "C_RETURN":
+            if self._command_type == self._command_types.rtrn:
                 return None
-            elif self._command_type == "C_ARITHMETIC":
+            elif self._command_type == self._command_types.arithmetic:
                 return self._line_tokens[0]
             else:
                 return self._line_tokens[1]
@@ -119,7 +122,12 @@ class Parser(object):
         """Return the second argument for the current command if the command is a Push,
         Pop, Function, or Call command. Returns None otherwise."""
         try:
-            if self._command_type in ["C_PUSH", "C_POP", "C_FUNCTION", "C_CALL"]:
+            if self._command_type in [
+                self._command_types.push,
+                self._command_types.pop,
+                self._command_types.function,
+                self._command_types.call,
+            ]:
                 return self._line_tokens[2]
             else:
                 return None
