@@ -1,2 +1,4 @@
 *.asm
 test_code/*
+*.pyc
+__pycache__/*
