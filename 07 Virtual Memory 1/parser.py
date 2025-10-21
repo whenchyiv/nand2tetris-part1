@@ -19,7 +19,7 @@ import os
 @dataclass
 class CommandTypes:
     """Dataclass containing the output string mappings of command types, to avoid typos and
-    allow for quick reference. Not the most performant option, but makes life easier."""
+    allow for quick reference. Not the most performant option but makes life easier."""
 
     push: str = "C_PUSH"
     pop: str = "C_POP"
