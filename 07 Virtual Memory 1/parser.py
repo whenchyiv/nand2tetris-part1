@@ -191,7 +191,6 @@ class Parser(object):
         self._load_lines()
 
     def __iter__(self):
-        self._load_lines()
         while self.has_more_lines:
             self._parse_line()
             yield ParsedCommand(self._command_type, self._arg1, self._arg2)
