@@ -49,11 +49,13 @@ class CodeWriter(object):
         # TODO:
         pass
 
-    def write(self):
+    def write(self, debug=False):
         print(f"Parsing {self.vm_filename}...")
         line_count: int = 0
         with open(self.output_filename, "w") as file:
-            for line in self._parser:
+            for line, token_list in self._parser:
+                if debug:  # Include VM tokens as a comment for debugging if requested.
+                    file.write(f"//{' '.join(token_list)}\n")
                 file.write(f"{line.command_type}: {line.arg1} {line.arg2}\n")
                 line_count += 1
         print(f"Successfully wrote {line_count} lines to {self.output_filename}.")

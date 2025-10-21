@@ -217,12 +217,17 @@ class Parser(object):
         self._load_lines()
 
     def __iter__(self):
+        """Iterate over the lines in the .vm file.
+        Yields a tuple of (ParsedCommand, list[str]) where the ParsedCommand is the parsed command"""
         while self.has_more_lines:
             # current_line starts at -1 so we need to advance before parsing.
             # We advance() first to ensure that we parse the final line.
             self.advance()
             self._parse_line()
-            yield ParsedCommand(self._command_type, self._arg1, self._arg2)
+            yield (
+                ParsedCommand(self._command_type, self._arg1, self._arg2),
+                self._line_tokens,
+            )
 
     def __len__(self):
         return self.total_lines
@@ -234,12 +239,13 @@ class Parser(object):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Hack VM parser.")
     parser.add_argument(
-        "filename", help="The name of the file to process", required=True
+        "filename",
+        help="The name of the file to process",
     )
     args = parser.parse_args()
     filename = args.filename
 
     parser = Parser(filename)
     print(parser)
-    for line in parser:
+    for line, _ in parser:
         print(f"{line.command_type}: {line.arg1} {line.arg2}")
