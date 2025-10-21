@@ -55,7 +55,7 @@ class Parser(object):
 
     filename: str
     lines: list[str] = list()
-    current_line: int = -1  # To ensure we catch line 0 when we advance()
+    current_line: int = -1  # Allows us to advance() before parsing, so we start on line 0 and also parse the final line.
     total_lines: int = 0
     _line_tokens: list[str]
     _command_types: CommandTypes = CommandTypes()
