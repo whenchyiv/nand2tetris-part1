@@ -145,7 +145,7 @@ class Parser(object):
         parsed_args = list()
         while self.has_more_lines:
             # current_line starts at -1 so we need to advance before parsing.
-            # We advance() first to ensure that we catch the final line.
+            # We advance() first to ensure that we parse the final line.
             self.advance()
             self._parse_line()
             parsed_args.append(
@@ -207,7 +207,7 @@ class Parser(object):
     def __iter__(self):
         while self.has_more_lines:
             # current_line starts at -1 so we need to advance before parsing.
-            # We advance() first to ensure that we catch the final line.
+            # We advance() first to ensure that we parse the final line.
             self.advance()
             self._parse_line()
             yield ParsedCommand(self._command_type, self._arg1, self._arg2)
