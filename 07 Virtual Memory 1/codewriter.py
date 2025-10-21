@@ -63,7 +63,7 @@ class CodeWriter(object):
         # Wtf? We should never get here.
         else:
             raise ValueError(
-                f"Unknown command type for pushpop command: {command.command_type}"
+                f"Unknown command type passed to pushpop assembly generation function: {command.command_type}"
             )
         return asm
 
