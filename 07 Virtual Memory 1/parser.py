@@ -19,7 +19,7 @@ import os
 @dataclass
 class CommandTypes:
     """Dataclass containing string mappings of command types to avoid typos and
-    allow for quick reference. Not the most performant option, but makes my life easier."""
+    allow for quick reference. Not the most performant option, but makes life easier."""
 
     push: str = "C_PUSH"
     pop: str = "C_POP"
@@ -28,7 +28,7 @@ class CommandTypes:
 
 @dataclass
 class ParsedCommand:
-    """Used for dot acccess to arg1/arg2 when iterating over the Parser object."""
+    """Used for dot access to arg1/arg2 when iterating over the Parser object."""
 
     command_type: str
     arg1: str | None = None
