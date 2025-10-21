@@ -96,6 +96,10 @@ class Parser(object):
             raise ValueError(
                 f"Unknown command at position 1 for line {self.current_line + 1}: {self._line_tokens}"
             )
+        except IndexError:
+            raise ValueError(
+                f"Missing command type for command at position 1 for line {self.current_line + 1}: {self._line_tokens}; this should not happen and is likely a Parser bug."
+            )
         if not command_type:
             raise ValueError(
                 f"Missing command type for command {self._arg1_tokens[0]} at position 1 for line {self.current_line + 1}. This is likely a Parser bug."
