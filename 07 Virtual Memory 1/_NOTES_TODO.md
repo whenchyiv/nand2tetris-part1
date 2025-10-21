@@ -3,6 +3,8 @@
 ## TODO
 
 - [ ] write automated tests for the parser.py
+- [ ] write automated tests for the codewriter.py
+- [ ] write automated tests for full script (interpres.py)
 - [ ] codewriter module
     - [ ] arithmetic asm generation
     - [x] push/pop asm generation
