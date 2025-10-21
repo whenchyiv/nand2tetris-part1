@@ -39,7 +39,7 @@ class ParsedCommand:
 
 
 class Parser(object):
-    """Parser for the Hack VM language. Requires a filename param on init (Parser(filename='')).
+    """Parser for the Hack VM language. Requires a filename param on init (Parser(filename: str)).
     Iterate over lines with a for loop, accessing arg1 and arg2 with .arg1 and .arg2 and command_type
     with .command_type.
 
