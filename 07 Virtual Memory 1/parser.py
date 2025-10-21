@@ -86,6 +86,7 @@ class Parser(object):
 
     @property
     def _command_type(self):
+        """The command type for the current line."""
         command_type: str | None = None
         token: str | None = None
         try:
@@ -138,9 +139,13 @@ class Parser(object):
 
     @property
     def _parsed_lines(self):
+        """The full list of all parsed lines for the .vm file.
+        Alternative private method to __iter__() in case the full parsed list is needed."""
         self._load_lines()
         parsed_args = list()
         while self.has_more_lines:
+            # current_line starts at -1 so we need to advance before parsing.
+            # We advance() first to ensure that we catch the final line.
             self.advance()
             self._parse_line()
             parsed_args.append(
@@ -176,6 +181,7 @@ class Parser(object):
                 )
 
     def advance(self):
+        """Advance to the next non-empty non-comment line in the .vm file."""
         if self.has_more_lines:
             self.current_line += 1
             self._parse_line()
@@ -200,6 +206,8 @@ class Parser(object):
 
     def __iter__(self):
         while self.has_more_lines:
+            # current_line starts at -1 so we need to advance before parsing.
+            # We advance() first to ensure that we catch the final line.
             self.advance()
             self._parse_line()
             yield ParsedCommand(self._command_type, self._arg1, self._arg2)
