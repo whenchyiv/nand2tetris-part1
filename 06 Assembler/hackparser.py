@@ -5,12 +5,12 @@ class HackParser(object):
     current_line: str = ""
     line_number: int = 0
 
-    def __init__(self, filename: str = None):
+    def __init__(self, filename: str | None = None):
         self.filename = filename
         if ".asm" not in self.filename:
             raise ValueError("File must be .asm file.")
         self._current_line_number = 0
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             self.linecount = len([1 for _ in f])
             print(self.linecount)
         self.advance()
@@ -24,10 +24,7 @@ class HackParser(object):
         while len(line) < 1:
             self._current_line_number += 1
             if self.has_more_lines:
-                l = linecache.getline(
-                    self.filename,
-                    self._current_line_number
-                )
+                l = linecache.getline(self.filename, self._current_line_number)
                 line = l.split("//")[0].replace(" ", "").replace("\n", "")
             else:
                 raise IndexError("End of file.")
@@ -48,19 +45,10 @@ class HackParser(object):
     @property
     def symbol(self):
         if (
-            self.instruction_type == "A_INSTRUCTION" or
-            self.instruction_type == "L_INSTRUCTION"
+            self.instruction_type == "A_INSTRUCTION"
+            or self.instruction_type == "L_INSTRUCTION"
         ):
-            return self.current_line.replace(
-                "@",
-                ""
-            ).replace(
-                "(",
-                ""
-            ).replace(
-                ")",
-                ""
-            )
+            return self.current_line.replace("@", "").replace("(", "").replace(")", "")
         else:
             return ""
 
