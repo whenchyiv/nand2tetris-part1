@@ -208,7 +208,7 @@ class Parser(object):
         return self.total_lines
 
     def __repr__(self):
-        return f"Parser(filename={self.filename}): {self.lines}"
+        return f"Parser(filename={self.filename})"
 
 
 if __name__ == "__main__":
