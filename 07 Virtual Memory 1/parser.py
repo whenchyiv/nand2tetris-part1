@@ -4,7 +4,7 @@ VM Parser for the Hack VM language. See The Elements of Computing Systems chapte
 Call with a --filename argument for the .vm file to parse. Defaults to the current directory
 if the filename does not include a path.
 
-VM files must have a .vm extension, and have the first letter of the filename capitalized (e.g. FileName.vm).
+VM files must have a .vm extension, and have the first letter of the filename capitalized in camelcase (e.g. FileName.vm).
 
 Author: Will Henchy
 Date: 2025-10-12
