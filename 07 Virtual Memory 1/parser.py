@@ -233,7 +233,9 @@ class Parser(object):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Hack VM parser.")
-    parser.add_argument("filename", help="The name of the file to process")
+    parser.add_argument(
+        "filename", help="The name of the file to process", required=True
+    )
     args = parser.parse_args()
     filename = args.filename
 
