@@ -113,9 +113,13 @@ class Parser(object):
                 return self._line_tokens[0]
             else:
                 return self._line_tokens[1]
-        except:
-            print(
-                f"Error parsing arg1 for line {self.current_line + 1}: {self._line_tokens}"
+        except KeyError:
+            raise ValueError(
+                f"Error parsingf command at position 1 on line {self.current_line + 1}: {self._line_tokens}"
+            )
+        except IndexError:
+            raise ValueError(
+                f"Missing  argument for command 1 on line {self.current_line + 1}: {self._line_tokens}"
             )
 
     @property
@@ -134,7 +138,11 @@ class Parser(object):
                 return None
         except KeyError:
             raise ValueError(
-                f"Invalid command at position 3 for line {self.current_line + 1}: {self._line_tokens}"
+                f"Invalid command at position 3 on line {self.current_line + 1}: {self._line_tokens}"
+            )
+        except IndexError:
+            raise ValueError(
+                f"Missing arg2 argument on line {self.current_line + 1}: {self._line_tokens}"
             )
 
     @property
