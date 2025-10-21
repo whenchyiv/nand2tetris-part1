@@ -51,12 +51,12 @@ class CodeWriter(object):
         asm: str = ""
         pointer_name: str = ram.NAMED_REGISTER_NAMES[str(command.arg1)]
         value: str | None = command.arg2
-        # Push assmebly generation
+        # Push assembly generation
         if command.command_type == self._command_types.push:
             asm += f"@{value}\nD=A\n"  # Store the value in the D register
             asm += f"@{pointer_name}\nA=M\nM=D\n"  # Push the D register value onto the relevant stack
             asm += f"@{pointer_name}\nM=M+1\n"  # Increment the stack pointer
-        # Pop assmebly generation
+        # Pop assembly generation
         elif command.command_type == self._command_types.pop:
             asm += f"@{pointer_name}\nM=M-1\n"  # Decrement the stack pointer value
             asm += f"@{pointer_name}\nD=M\n"  # Read the value from the top of the stack and store in the D register
