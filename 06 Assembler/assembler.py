@@ -26,13 +26,15 @@ SYMBOLTABLE = {
     "THIS": "3",
     "THAT": "4",
     "SCREEN": "16384",
-    "KBD": "24576"
+    "KBD": "24576",
 }
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser(description="Hack assembler.")
     argparser.add_argument("-f", "--file", required=True, help=".asm file")
-    argparser.add_argument("-o", "--output", required=True, help="Output filename (.hack)")
+    argparser.add_argument(
+        "-o", "--output", required=True, help="Output filename (.hack)"
+    )
     args = argparser.parse_args()
     if ".hack" not in args.output:
         raise ValueError("Output must be .hack file.")
@@ -41,13 +43,11 @@ if __name__ == "__main__":
     print(f"Scanning {args.file}...")
 
     symbol_parser = HackParser(filename=args.file)
+    labels = []
     while symbol_parser.has_more_lines:
-        labels = []
         if symbol_parser.instruction_type == "L_INSTRUCTION":
             if symbol_parser.symbol not in labels:
-                SYMBOLTABLE[symbol_parser.symbol] = str(
-                    symbol_parser.line_number
-                )
+                SYMBOLTABLE[symbol_parser.symbol] = str(symbol_parser.line_number)
                 labels.append(symbol_parser.symbol)
         try:
             symbol_parser.advance()
@@ -67,19 +67,19 @@ if __name__ == "__main__":
 
     while parser.has_more_lines:
         print(f"Assembling line {parser.current_line}")
+        line_binary: str = ""
         if parser.instruction_type == "C_INSTRUCTION":
             bin_codes = generate_binary_codes(parser)
             print(bin_codes)
             line_binary = f"111{bin_codes['a']}{bin_codes['comp']}{bin_codes['dest']}{bin_codes['jump']}"
         elif parser.instruction_type == "A_INSTRUCTION":
-            if (
-                not SYMBOLTABLE.get(parser.symbol) and
-                not parser.symbol[0].isdigit()
-            ):
+            if not SYMBOLTABLE.get(parser.symbol) and not parser.symbol[0].isdigit():
                 print(f"Storing var {parser.symbol}")
                 SYMBOLTABLE[parser.symbol] = str(var_address)
                 var_address += 1
-            line_binary = f"0{format(int(SYMBOLTABLE.get(parser.symbol, parser.symbol)), '015b')}"
+            line_binary = (
+                f"0{format(int(SYMBOLTABLE.get(parser.symbol, parser.symbol)), '015b')}"
+            )
         if parser.instruction_type != "L_INSTRUCTION":
             print(line_binary)
             binary.append(line_binary)

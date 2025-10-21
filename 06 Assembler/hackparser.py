@@ -6,6 +6,8 @@ class HackParser(object):
     line_number: int = 0
 
     def __init__(self, filename: str | None = None):
+        if not filename:
+            raise ValueError("No filename provided to HackParser() init; aborting.")
         self.filename = filename
         if ".asm" not in self.filename:
             raise ValueError("File must be .asm file.")
