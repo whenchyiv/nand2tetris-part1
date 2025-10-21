@@ -44,6 +44,10 @@ class CodeWriter(object):
         self._parser = Parser(self.vm_filename)
 
     def _write_pushpop(self, command: ParsedCommand) -> str:
+        """Writes the push and pop assembly commands to the output file.
+        Args:
+            command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
+        """
         asm: str = ""
         pointer_name: str = ram.NAMED_REGISTER_NAMES[str(command.arg1)]
         value: str | None = command.arg2
@@ -61,10 +65,18 @@ class CodeWriter(object):
         return asm
 
     def _write_arithmetic(self, command: ParsedCommand):
+        """Writes the arithmetic assembly commands to the output file.
+        Args:
+            command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
+        """
         # TODO:
         pass
 
     def write(self, debug=False):
+        """Writes the entire .vm file to the output file.
+        Args:
+            debug (bool): If True, include VM tokens as comments in the output file.
+        """
         print(f"Parsing {self.vm_filename}...")
         line_count: int = 0
         with open(self.output_filename, "w") as file:
