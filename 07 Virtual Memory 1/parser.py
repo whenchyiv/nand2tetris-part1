@@ -55,7 +55,7 @@ class Parser(object):
 
     filename: str
     lines: list[str] = list()
-    current_line: int = 0
+    current_line: int = -1  # To ensure we catch line 0 when we advance()
     total_lines: int = 0
     _line_tokens: list[str]
     _command_types: CommandTypes = CommandTypes()
@@ -133,11 +133,11 @@ class Parser(object):
         self._load_lines()
         parsed_args = list()
         while self.has_more_lines:
+            self.advance()
             self._parse_line()
             parsed_args.append(
                 ParsedCommand(self._command_type, self._arg1, self._arg2)
             )
-            self.advance()
         return parsed_args
 
     def _load_lines(self):
@@ -192,9 +192,9 @@ class Parser(object):
 
     def __iter__(self):
         while self.has_more_lines:
+            self.advance()
             self._parse_line()
             yield ParsedCommand(self._command_type, self._arg1, self._arg2)
-            self.advance()
 
     def __len__(self):
         return self.total_lines
