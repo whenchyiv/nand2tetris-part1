@@ -1,6 +1,6 @@
 # The Elements of Computing Systems Part 1: Hardware
 
-A virtual von Nuemann machine from scratch. Completed while sleep deprived on paternity leave.
+A virtual computer from scratch. Completed while sleep deprived on paternity leave.
 
 Requires the [simulator software suite](https://www.nand2tetris.org/software).
 
