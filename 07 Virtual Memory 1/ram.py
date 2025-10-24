@@ -22,7 +22,11 @@ NAMED_REGISTER_ADDRESSES: dict[str, int] = {
     "argument": ARG,
     "this": THIS,
     "that": THAT,
+    "temp": TEMP[0],
     "constant": SP,  # Constant commands push string to stack
+    "r13": R13,
+    "r14": R14,
+    "r15": R15,
 }
 NAMED_REGISTER_NAMES: dict[str, str] = {
     "stackpointer": "SP",

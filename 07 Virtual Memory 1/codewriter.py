@@ -43,25 +43,39 @@ class CodeWriter(object):
         self.vm_filename = vm_filename
         self._parser = Parser(self.vm_filename)
 
-    def _write_pushpop(self, command: ParsedCommand) -> str:
+    def _write_pushpop(self, command: ParsedCommand, line_number: int) -> str:
         """Writes the push and pop assembly commands to the output file.
         Args:
             command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
         """
         asm: str = ""
-        pointer_name: str = ram.NAMED_REGISTER_NAMES[str(command.arg1)]
-        value: str | None = command.arg2
+        base_memory_address: int = ram.NAMED_REGISTER_ADDRESSES[
+            str(command.arg1)
+        ]  # Get the base memory address for the memory segment
+        arg2_value: str | None = (
+            command.arg2
+        )  # Get the string value of the segment offset
+        if not arg2_value:
+            raise ValueError(
+                f"Push command missing memory address at line {line_number}."
+            )
+        memory_address_offset: int = int(
+            arg2_value
+        )  # Convert to int for pointer arithmetic
         # Push assembly generation
         if command.command_type == self._command_types.push:
-            asm += f"@{value}\nD=A\n"  # Store the value in the D register
-            asm += f"@{pointer_name}\nA=M\nM=D\n"  # Push the D register value onto the relevant stack
-            asm += f"@{pointer_name}\nM=M+1\n"  # Increment the stack pointer
+            asm += f"@{base_memory_address + memory_address_offset}\nD=M\n"  # Store the value in the D register
+            asm += (
+                "@SP\nA=M\nM=D\n"  # Push the D register value onto the relevant stack
+            )
+            asm += "@SP\nM=M+1\n"  # Increment the stack pointer
         # Pop assembly generation
         elif command.command_type == self._command_types.pop:
-            asm += f"@{pointer_name}\nM=M-1\n"  # Decrement the stack pointer value
-            asm += f"@{pointer_name}\nD=M\n"  # Read the value from the top of the stack and store in the D register
-        # Wtf? We should never get here.
+            asm += "@SP\nM=M-1\n"  # Decrement the stack pointer value
+            asm += "@SP\nD=M\n"  # Read the value from the top of the stack and store in the D register
+            asm += "@{base_memory_address + memory_address_offset}\nM=D\n"  # Store the value in the memory address
         else:
+            # Wtf? We should never get here.
             raise ValueError(
                 f"Unknown command type passed to pushpop assembly generation function: {command.command_type}"
             )
@@ -72,7 +86,6 @@ class CodeWriter(object):
         Args:
             command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
         """
-        # TODO:
         pass
 
     def write(self, debug=False):
@@ -90,7 +103,7 @@ class CodeWriter(object):
                     line.command_type == self._command_types.push
                     or line.command_type == self._command_types.pop
                 ):
-                    file.write(self._write_pushpop(line))
+                    file.write(self._write_pushpop(line, line_count))
                 else:
                     file.write(f"{line.command_type}: {line.arg1} {line.arg2}\n")
                 line_count += 1
