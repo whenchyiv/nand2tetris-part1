@@ -48,7 +48,6 @@ class CodeWriter(object):
         Args:
             command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
         """
-
         try:
             base_memory_address: int = ram.NAMED_REGISTER_ADDRESSES[
                 str(command.arg1)
