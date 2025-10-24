@@ -89,7 +89,7 @@ class CodeWriter(object):
         asm: str = ""
         return asm
 
-    def write(self, debug=False):
+    def write(self, debug: bool = False):
         """Writes the entire .vm file to the output file.
         Args:
             debug (bool): If True, include VM tokens as comments in the output file.
