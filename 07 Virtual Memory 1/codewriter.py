@@ -48,7 +48,7 @@ class CodeWriter(object):
         Args:
             command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
         """
-        asm: str = ""
+
         try:
             base_memory_address: int = ram.NAMED_REGISTER_ADDRESSES[
                 str(command.arg1)
@@ -65,6 +65,8 @@ class CodeWriter(object):
         memory_address_offset: int = int(
             arg2_value
         )  # Convert to int for pointer arithmetic
+
+        asm: str = ""
         # Push assembly generation
         if command.command_type == self._command_types.push:
             asm += f"@{base_memory_address + memory_address_offset}\nD=M\n"  # Store the value in the D register
@@ -81,6 +83,7 @@ class CodeWriter(object):
             raise ValueError(
                 f"Unknown command type passed to pushpop assembly generation function: {command.command_type}"
             )
+
         return asm
 
     def _write_arithmetic(self, command: ParsedCommand, line_number: int) -> str:
@@ -98,6 +101,7 @@ class CodeWriter(object):
             debug (bool): If True, include VM tokens as comments in the output file.
         """
         print(f"Parsing {self.vm_filename}...")
+
         line_count: int = 0
         with open(self.output_filename, "w") as file:
             for line, token_list in self._parser:
@@ -111,4 +115,5 @@ class CodeWriter(object):
                 else:
                     file.write(f"{line.command_type}: {line.arg1} {line.arg2}\n")
                 line_count += 1
+
         print(f"Successfully wrote {line_count} lines to {self.output_filename}.")
