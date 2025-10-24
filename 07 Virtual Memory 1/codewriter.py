@@ -83,7 +83,6 @@ class CodeWriter(object):
             raise ValueError(
                 f"Unknown command type passed to pushpop assembly generation function: {command.command_type}"
             )
-
         return asm
 
     def _write_arithmetic(self, command: ParsedCommand, line_number: int) -> str:
