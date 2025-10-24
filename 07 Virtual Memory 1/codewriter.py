@@ -49,9 +49,12 @@ class CodeWriter(object):
             command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
         """
         asm: str = ""
-        base_memory_address: int = ram.NAMED_REGISTER_ADDRESSES[
-            str(command.arg1)
-        ]  # Get the base memory address for the memory segment
+        try:
+            base_memory_address: int = ram.NAMED_REGISTER_ADDRESSES[
+                str(command.arg1)
+            ]  # Get the base memory address for the memory segment
+        except KeyError:
+            raise ValueError(f"Invalid memory segment at line {line_number}.")
         arg2_value: str | None = (
             command.arg2
         )  # Get the string value of the segment offset
