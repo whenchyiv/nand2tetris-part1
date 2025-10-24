@@ -27,6 +27,7 @@ class CodeWriter:
 
 from parser import Parser, ParsedCommand, CommandTypes
 import ram
+import textwrap
 
 
 class CodeWriter(object):
@@ -42,6 +43,14 @@ class CodeWriter(object):
         self.output_filename = output_filename
         self.vm_filename = vm_filename
         self._parser = Parser(self.vm_filename)
+
+    def _generate_push_asm(self, pointer: str) -> str:
+        """Generic push command generation for re-use."""
+        return asm
+
+    def _generate_pop_asm(self, pointer: str) -> str:
+        """Generic pop command generation for re-use."""
+        return asm
 
     def _write_pushpop(self, command: ParsedCommand, line_number: int) -> str:
         """Writes the push and pop assembly commands to the output file.
@@ -68,33 +77,87 @@ class CodeWriter(object):
         asm: str = ""
         if command.command_type == self._command_types.push:
             # Push assembly generation
-            asm += f"@{base_memory_address + memory_address_offset}\nD=M\n"  # Store the value in the D register
-            asm += (
-                "@SP\nA=M\nM=D\n"  # Push the D register value onto the relevant stack
-            )
-            asm += "@SP\nM=M+1\n"  # Increment the stack pointer
+            asm = f"""\
+            @{base_memory_address + memory_address_offset} // Memory segment {command.arg1} at address {base_memory_address} plus offset of {memory_address_offset}
+            D=M //  Store the value in the D register for addition to the stack
+            @SP // Stack pointer
+            A=M // Get current address for the top of the stack
+            M=D // Store the D value at the top of the stack
+            @SP // Stack pointer
+            M=M+1 // SP++
+            """
         elif command.command_type == self._command_types.pop:
             # Pop assembly generation
-            asm += "@SP\nM=M-1\nA=M\nD=M\n"  # Decrement the stack pointer value
-            asm += f"@{base_memory_address + memory_address_offset}\nM=D\n"  # Store the value in the memory address
+            asm = f"""\
+            @SP // Stack pointer
+            M=M-1 // SP--
+            A=M // Get current address for the top of the stack
+            D=M // Store the value in the D register for addition to the stack
+            @{base_memory_address + memory_address_offset} // Memory segment {command.arg1} at address {base_memory_address} plus offset of {memory_address_offset}
+            M=D // Store the D value at the top of the stack
+            """
         else:
             # Wtf? We should never get here.
             raise ValueError(
                 f"Unknown command type passed to pushpop assembly generation function: {command.command_type}"
             )
 
-        return asm
+        return textwrap.dedent(
+            asm
+        )  # remove indentation in strings added for code readability
 
     def _write_arithmetic(self, command: ParsedCommand, line_number: int) -> str:
         """Writes the arithmetic assembly commands to the output file.
         Args:
             command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
         """
-        # TODO: Implement arithmetic assembly generation
-        asm: str = ""
-        return asm
+        vm_command: str | None = command.arg1
+        if not vm_command:
+            raise ValueError(
+                f"Missing command for arithmetic command at line {line_number}."
+            )
 
-    def write(self, debug: bool = False):
+        asm: str = ""
+        if vm_command == "add":
+            asm = """\
+            @SP // Stack pointer
+            M=M-1 // SP-- to value of y
+            A=M // Load the memory value of y (M = address of y)
+            D=M // D register = y 
+            @SP // Stack pointer
+            M=M-1 //SP-- to value of  x
+            A=M // Load the memory value of x (M = address of x)
+            M=M+D // M (x) = M (x) + D (y)
+            @SP // Stack pointer
+            M=M+1 // SP++
+            """
+        elif vm_command == "sub":
+            asm = """\
+            @SP // Stack pointer
+            M=M-1 // SP-- to value of y
+            A=M // Load the memory value of y (M = address of y)
+            D=M // D register = y 
+            @SP // Stack pointer
+            M=M-1 //SP-- to value of  x
+            A=M // Load the memory value of x (M = address of x)
+            M=M-D // M (x) = M (x) - D (y)
+            @SP // Stack pointer
+            M=M+1 // SP++
+            """
+        elif vm_command == "neg":
+            asm = """\
+            @SP // Stack pointer
+            A=M-1 // Address one below the SP to get the value of y
+            M=-M // y = negative y
+            """
+        else:
+            asm = f"""// Unimplemented arithmetic command: {vm_command}"""
+
+        return textwrap.dedent(
+            asm
+        )  # remove indentation in strings added for code readability
+
+    def write(self, debug: bool = True):
         """Writes the entire .vm file to the output file.
         Args:
             debug (bool): If True, include VM tokens as comments in the output file.
@@ -111,8 +174,12 @@ class CodeWriter(object):
                     or line.command_type == self._command_types.pop
                 ):
                     file.write(self._write_pushpop(line, line_count))
+                elif line.command_type == self._command_types.arithmetic:
+                    file.write(self._write_arithmetic(line, line_count))
                 else:
                     file.write(f"{line.command_type}: {line.arg1} {line.arg2}\n")
+                if debug:
+                    file.write("\n")  # Extra whitespace for readability
                 line_count += 1
 
         print(f"Successfully wrote {line_count} lines to {self.output_filename}.")
