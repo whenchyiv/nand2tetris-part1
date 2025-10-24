@@ -65,7 +65,6 @@ class CodeWriter(object):
             arg2_value
         )  # Convert to int for pointer arithmetic
 
-        # Generate the assembly
         asm: str = ""
         if command.command_type == self._command_types.push:
             # Push assembly generation
