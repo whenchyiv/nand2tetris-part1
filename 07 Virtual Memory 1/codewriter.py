@@ -71,8 +71,7 @@ class CodeWriter(object):
             asm += "@SP\nM=M+1\n"  # Increment the stack pointer
         # Pop assembly generation
         elif command.command_type == self._command_types.pop:
-            asm += "@SP\nM=M-1\n"  # Decrement the stack pointer value
-            asm += "@SP\nD=M\n"  # Read the value from the top of the stack and store in the D register
+            asm += "@SP\nM=M-1\nD=M\n"  # Decrement the stack pointer value
             asm += f"@{base_memory_address + memory_address_offset}\nM=D\n"  # Store the value in the memory address
         else:
             # Wtf? We should never get here.
