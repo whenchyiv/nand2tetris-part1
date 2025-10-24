@@ -154,7 +154,7 @@ class Parser(object):
         """The full list of all parsed lines for the .vm file.
         Alternative private method to __iter__() in case the full parsed list is needed."""
         self._load_lines()
-        parsed_args = list()
+        parsed_args: list[ParsedCommand] = list()
         while self.has_more_lines:
             # current_line starts at -1 so we need to advance before parsing.
             # We advance() first to ensure that we parse the final line.
@@ -170,7 +170,7 @@ class Parser(object):
         with open(self.filename, "r") as file:
             # Store the lines in a list, stripping out extra chars (indents, newlines, etc.).
             for line in file.readlines():
-                stripped_line = dedent(line.strip())
+                stripped_line: str = dedent(line.strip())
                 if (
                     len(stripped_line) > 0 and line[:2] != "//"
                 ):  # Ignore blank lines and comments (lines that start with "//")
@@ -237,15 +237,15 @@ class Parser(object):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Hack VM parser.")
-    parser.add_argument(
+    cli_parser = argparse.ArgumentParser(description="Hack VM parser.")
+    cli_parser.add_argument(
         "filename",
         help="The name of the file to process",
     )
-    args = parser.parse_args()
-    filename = args.filename
+    args: argparse.Namespace = cli_parser.parse_args()
+    filename: str = args.filename
 
-    parser = Parser(filename)
+    parser: Parser = Parser(filename)
     print(parser)
     for line, _ in parser:
         print(f"{line.command_type}: {line.arg1} {line.arg2}")
