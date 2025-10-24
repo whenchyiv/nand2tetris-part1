@@ -67,15 +67,15 @@ class CodeWriter(object):
 
         # Generate the assembly
         asm: str = ""
-        # Push assembly generation
         if command.command_type == self._command_types.push:
+            # Push assembly generation
             asm += f"@{base_memory_address + memory_address_offset}\nD=M\n"  # Store the value in the D register
             asm += (
                 "@SP\nA=M\nM=D\n"  # Push the D register value onto the relevant stack
             )
             asm += "@SP\nM=M+1\n"  # Increment the stack pointer
-        # Pop assembly generation
         elif command.command_type == self._command_types.pop:
+            # Pop assembly generation
             asm += "@SP\nM=M-1\nA=M\nD=M\n"  # Decrement the stack pointer value
             asm += f"@{base_memory_address + memory_address_offset}\nM=D\n"  # Store the value in the memory address
         else:
