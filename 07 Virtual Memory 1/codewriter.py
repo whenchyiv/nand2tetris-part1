@@ -81,12 +81,14 @@ class CodeWriter(object):
             )
         return asm
 
-    def _write_arithmetic(self, command: ParsedCommand):
+    def _write_arithmetic(self, command: ParsedCommand, line_number: int) -> str:
         """Writes the arithmetic assembly commands to the output file.
         Args:
             command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
         """
-        pass
+        # TODO: Implement arithmetic assembly generation
+        asm: str = ""
+        return asm
 
     def write(self, debug=False):
         """Writes the entire .vm file to the output file.
