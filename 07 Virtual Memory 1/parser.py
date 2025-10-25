@@ -76,6 +76,22 @@ class Parser(object):
         "not": _command_types.arithmetic,
     }
 
+    def __init__(self, filename: str | None):
+        if not filename:
+            raise ValueError("No filename provided to Parser() init.")
+
+        basename = os.path.basename(filename)  # Check against VM filename specs
+        if ".vm" not in basename:
+            raise ValueError("Filename must be a .vm file.")
+        if basename[0].isupper() is False:
+            raise ValueError(
+                'Filename must begin with a capital letter (e.g. "FileName.vm").'
+            )
+
+        # Load and parse the vm file
+        self.filename = filename
+        self._load_lines()
+
     @property
     def has_more_lines(self):
         """Does the file have more lines to parse?"""
@@ -199,22 +215,6 @@ class Parser(object):
             self._parse_line()
         else:
             raise IndexError("Cannot advance past the max line index.")
-
-    def __init__(self, filename: str | None):
-        if not filename:
-            raise ValueError("No filename provided to Parser() init.")
-
-        basename = os.path.basename(filename)  # Check against VM filename specs
-        if ".vm" not in basename:
-            raise ValueError("Filename must be a .vm file.")
-        if basename[0].isupper() is False:
-            raise ValueError(
-                'Filename must begin with a capital letter (e.g. "FileName.vm").'
-            )
-
-        # Load and parse the vm file
-        self.filename = filename
-        self._load_lines()
 
     def __iter__(self):
         """Iterate over the lines in the .vm file.
