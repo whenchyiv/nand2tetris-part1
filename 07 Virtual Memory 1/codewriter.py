@@ -58,11 +58,6 @@ class CodeWriter(object):
                 @{base_memory_address + memory_address_offset} // {command.arg1.title()} memory segment {command.arg1} at address {base_memory_address + memory_address_offset}
                 D=M // Store the value in D
                 """
-            elif command.arg1 == "pointer":
-                asm = f"""\
-                @{base_memory_address + memory_address_offset} // {command.arg1.title()} memory segment {command.arg1} at address {base_memory_address + memory_address_offset}
-                D=M // Store the current value of the pointer in D
-                """
             elif command.arg1 in ["this", "that", "local", "argument"]:
                 asm = f"""\
                 @{base_memory_address} // Memory segment {command.arg1} at address {base_memory_address}
@@ -71,6 +66,11 @@ class CodeWriter(object):
                 D=D+A // Offset the base memory address D by the constant value
                 A=D // Access the address to read the value stored at (D+A)
                 D=M // Store the value in D
+                """
+            elif command.arg1 == "pointer":
+                asm = f"""\
+                @{base_memory_address + memory_address_offset} // {command.arg1.title()} memory segment {command.arg1} at address {base_memory_address + memory_address_offset}
+                D=M // Store the current value of the pointer in D
                 """
             else:
                 # Not implemented
