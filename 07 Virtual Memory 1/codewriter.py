@@ -178,6 +178,8 @@ class CodeWriter(object):
             @SP // Stack pointer
             A=M-1 // Address one below the SP to get the value of y
             M=-M // y = negative y
+            @SP // Stack pointer
+            M=M+1 // SP++
             """
         elif vm_command == "eq":
             asm = """\
@@ -226,7 +228,7 @@ class CodeWriter(object):
             (END)
             @SP // Stack pointer
             A=M  // Get address for the memory location at the top of the stack
-            M=D // Store the equality test to the top of the stack
+            M=D // Store the greater than test to the top of the stack
             @SP // Stack pointer
             M=M+1 // SP++
             """
@@ -252,7 +254,41 @@ class CodeWriter(object):
             (END)
             @SP // Stack pointer
             A=M  // Get address for the memory location at the top of the stack
-            M=D // Store the equality test to the top of the stack
+            M=D // Store the less than test to the top of the stack
+            @SP // Stack pointer
+            M=M+1 // SP++
+            """
+        elif vm_command == "and":
+            asm = """\
+            @SP // Stack pointer
+            M=M-1 // SP-- to value of y
+            A=M // Load the memory value of y (M = address of y)
+            D=M // Save the value of y in D
+            @SP // Stack pointer
+            M=M-1 // SP-- to value of x
+            A=M // Load the value of x (M = address of x)
+            M=D&M // Bitwise AND stored to the stack location
+            @SP // Stack pointer
+            M=M+1 // SP++
+            """
+        elif vm_command == "or":
+            asm = """\
+            @SP // Stack pointer
+            M=M-1 // SP-- to value of y
+            A=M // Load the memory value of y (M = address of y)
+            D=M // Save the value of y in D
+            @SP // Stack pointer
+            M=M-1 // SP-- to value of x
+            A=M // Load the value of x (M = address of x)
+            M=D|M // Bitwise OR stored to the stack location
+            @SP // Stack pointer
+            M=M+1 // SP++
+            """
+        elif vm_command == "not":
+            asm = """\
+            @SP // Stack pointer
+            A=M-1 // Address one below the SP to get the value of y
+            M=!M // y = negative y
             @SP // Stack pointer
             M=M+1 // SP++
             """
