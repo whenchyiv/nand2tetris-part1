@@ -148,8 +148,6 @@ class CodeWriter(object):
                 f"Missing command for arithmetic command at line {line_number}."
             )
 
-        # TODO: Add comparison and logical commands
-
         asm: str = ""
         if vm_command == "add":
             asm = """\
