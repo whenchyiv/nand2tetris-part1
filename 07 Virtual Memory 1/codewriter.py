@@ -178,11 +178,9 @@ class CodeWriter(object):
             @SP // Stack pointer
             A=M-1 // Address one below the SP to get the value of y
             M=-M // y = negative y
-            @SP // Stack pointer
-            M=M+1 // SP++
             """
         elif vm_command == "eq":
-            asm = """\
+            asm = f"""\
             @SP // Stack pointer
             M=M-1 // SP-- to value of y
             A=M // Load the memory value of y (M = address of y)
@@ -190,16 +188,17 @@ class CodeWriter(object):
             @SP // Stack pointer
             M=M-1 // SP-- to value of x
             A=M
-            D=D-M // Check for zero (equality) y = y -x
-            @EQUAL // Load the EQUAL memory address to A for the JEQ command if equal
-            D; JEQ // Jump to the A address if D (y) is zero (the values are equal)
-            (NOT_EQUAL)
+            M=M-D // Check for zero (equality) x = x - y
+            D=M
+            @EQUAL.{line_number} // Load the EQUAL memory address to A for the JEQ command if equal
+            D;JEQ // Jump to the A address if D (x) is zero (the values are equal)
+            (NOT_EQUAL.{line_number})
             D=0 // Twos compliment 00000000
-            @END // Load the END address to jump an skip the EQUAL section
-            0; JMP // Jump to the (END)
-            (EQUAL)
+            @END.{line_number} // Load the END address to jump an skip the EQUAL section
+            0;JMP // Jump to the (END)
+            (EQUAL.{line_number})
             D=-1 // Twos compliment 11111111
-            (END)
+            (END.{line_number})
             @SP // Stack pointer
             A=M  // Get address for the memory location at the top of the stack
             M=D // Store the equality test to the top of the stack
@@ -207,7 +206,7 @@ class CodeWriter(object):
             M=M+1 // SP++
             """
         elif vm_command == "gt":
-            asm = """\
+            asm = f"""\
             @SP // Stack pointer
             M=M-1 // SP-- to value of y
             A=M // Load the memory value of y (M = address of y)
@@ -217,15 +216,15 @@ class CodeWriter(object):
             A=M // Load the value of x (M = address of x)
             M=M-D // x = x - y
             D=M // Store the result in D for a jump
-            @GREATER // Load the GREATER memory address to A for the JGT command
-            D; JGT // Jump to the A address if M (x) is greater than zero (the values are equal)
-            (LESSER)
+            @GREATER.{line_number} // Load the GREATER memory address to A for the JGT command
+            D;JGT // Jump to the A address if M (x) is greater than zero (the values are equal)
+            (LESSER.{line_number})
             D=0 // Twos compliment 00000000
-            @END // Load the END address to jump an skip the EQUAL section
-            0; JMP // Jump to the (END)
-            (GREATER)
+            @END.{line_number} // Load the END address to jump an skip the EQUAL section
+            0;JMP // Jump to the (END)
+            (GREATER.{line_number})
             D=-1 // Twos compliment 11111111
-            (END)
+            (END.{line_number})
             @SP // Stack pointer
             A=M  // Get address for the memory location at the top of the stack
             M=D // Store the greater than test to the top of the stack
@@ -233,7 +232,7 @@ class CodeWriter(object):
             M=M+1 // SP++
             """
         elif vm_command == "lt":
-            asm = """\
+            asm = f"""\
             @SP // Stack pointer
             M=M-1 // SP-- to value of y
             A=M // Load the memory value of y (M = address of y)
@@ -243,15 +242,15 @@ class CodeWriter(object):
             A=M // Load the value of x (M = address of x)
             M=M-D // x = x - y
             D=M // Store the result in D for a jump
-            @LESSER // Load the GREATER memory address to A for the JLT command
-            D; JLT // Jump to the A address if M (x) is less than zero (the values are equal)
-            (GREATER)
+            @LESSER.{line_number} // Load the GREATER memory address to A for the JLT command
+            D;JLT // Jump to the A address if M (x) is less than zero (the values are equal)
+            (GREATER.{line_number})
             D=0 // Twos compliment 00000000
-            @END // Load the END address to jump an skip the EQUAL section
-            0; JMP // Jump to the (END)
-            (LESSER)
+            @END.{line_number} // Load the END address to jump an skip the EQUAL section
+            0;JMP // Jump to the (END)
+            (LESSER.{line_number})
             D=-1 // Twos compliment 11111111
-            (END)
+            (END.{line_number})
             @SP // Stack pointer
             A=M  // Get address for the memory location at the top of the stack
             M=D // Store the less than test to the top of the stack
@@ -289,12 +288,10 @@ class CodeWriter(object):
             @SP // Stack pointer
             A=M-1 // Address one below the SP to get the value of y
             M=!M // y = negative y
-            @SP // Stack pointer
-            M=M+1 // SP++
             """
         else:
             raise NotImplementedError(
-                f"Unimplemented arithmetic command: {vm_command} at line {line_number}."
+                f"Unimplemented arithmetic command: {vm_command} at line {line_number}u."
             )
 
         return textwrap.dedent(
