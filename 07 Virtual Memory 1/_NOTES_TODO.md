@@ -13,4 +13,5 @@
         - [x] fix sub logic.
         - [ ] add comparison commands
         - [ ] add logical commands
+        - [ ] test with StackTest.vm
 - [x] Create main script that calls into the codewriter and runs the whole thing (interpres.py)
