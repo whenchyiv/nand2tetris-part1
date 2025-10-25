@@ -108,6 +108,10 @@ class CodeWriter(object):
                 @{base_memory_address + memory_address_offset} // {command.arg1.title()} memory segment {command.arg1} at address {base_memory_address + memory_address_offset}
                 D=A // Set the D value to the current value of the pointer
                 """
+            else:
+                raise NotImplementedError(
+                    f"Unimplemented {command.arg1} at line {line_number}."
+                )
 
             # Remove indents from f-strings for readability
             asm = textwrap.dedent(asm)
