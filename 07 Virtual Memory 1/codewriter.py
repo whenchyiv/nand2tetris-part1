@@ -4,27 +4,6 @@ Author: Will Henchy
 Date: 2025-10-12
 """
 
-"""
-# Plan:
-- Initialize with a Parser() and filename
-- write() function which:
-    - opens the file
-    - iterates over the parser
-    - calls to the write_arithmetic and write_pushpop commands to write each line of assembly code based on the command type provided by the line
-    - closes the file and saves to the given filename
-    - returns success and a status message (wrote blah blah blah)
-
-# Psuedocode:
-class CodeWriter:
-    filename: str
-    parser: Parser
-    
-    __init__()
-    _write_pushpop()
-    _write_arithmetic()
-    write()
-"""
-
 from parser import Parser, ParsedCommand, CommandTypes
 import ram
 import textwrap
