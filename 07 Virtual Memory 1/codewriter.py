@@ -46,8 +46,8 @@ class CodeWriter(object):
         )  # Convert to int for pointer arithmetic
 
         asm: str = ""
+        # Push assembly generation
         if command.command_type == self._command_types.push:
-            # Push assembly generation
             if command.arg1 == "constant":
                 asm = f"""\
                 @{command.arg2} // Constant value
@@ -77,16 +77,19 @@ class CodeWriter(object):
                 raise NotImplementedError(
                     f"Unimplimented {command.arg1} at line {line_number}."
                 )
+            # Remove indents for readability
+            asm = textwrap.dedent(asm)
+
             # Push logic is the same for all commands
-            asm += """\
+            asm += textwrap.dedent("""\
             @SP // Proceed to push to the stack
             A=M // Address at the top of the stack
             M=D // Push the value in D to the stack memory location
             @SP // Stack pointer incriment begin
             M=M+1 // SP++
-            """
+            """)
+        # Pop assembly generation
         elif command.command_type == self._command_types.pop:
-            # Pop assembly generation
             if command.arg1 in ["static", "temp"]:
                 asm = f"""\
                 @{base_memory_address + memory_address_offset} // {command.arg1.title()} memory segment {command.arg1} at address {base_memory_address + memory_address_offset}
@@ -104,8 +107,11 @@ class CodeWriter(object):
                 @{base_memory_address + memory_address_offset} // {command.arg1.title()} memory segment {command.arg1} at address {base_memory_address + memory_address_offset}
                 D=A // Set the D value to the current value of the pointer
                 """
+            # Remove indents for readability
+            asm = textwrap.dedent(asm)
+
             # Generic push logic
-            asm += """\
+            asm += textwrap.dedent("""\
             @R13 // R13 temporary register
             M=D // Store the offset address in R13
             @SP // Stack pointer
@@ -115,16 +121,15 @@ class CodeWriter(object):
             @R13 // Back to R13 so we can pop the value off the stack to the offset memory address
             A=M // Set our memory location to the offset address
             M=D // Store the value from the top of the stack to that offset address
-            """
+            """)
         else:
             # Wtf? We should never get here.
             raise ValueError(
                 f"Unknown command type passed to pushpop assembly generation function: {command.command_type}"
             )
+        asm = textwrap.dedent(asm)
 
-        return textwrap.dedent(
-            asm
-        )  # remove indentation in strings added for code readability
+        return asm
 
     def _write_arithmetic(self, command: ParsedCommand, line_number: int) -> str:
         """Writes the arithmetic assembly commands to the output file.
