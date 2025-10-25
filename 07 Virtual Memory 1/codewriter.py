@@ -77,7 +77,8 @@ class CodeWriter(object):
                 raise NotImplementedError(
                     f"Unimplimented {command.arg1} at line {line_number}."
                 )
-            # Remove indents for readability
+
+            # Remove indents from f-strings for readability
             asm = textwrap.dedent(asm)
 
             # Push logic is the same for all commands
@@ -107,7 +108,8 @@ class CodeWriter(object):
                 @{base_memory_address + memory_address_offset} // {command.arg1.title()} memory segment {command.arg1} at address {base_memory_address + memory_address_offset}
                 D=A // Set the D value to the current value of the pointer
                 """
-            # Remove indents for readability
+
+            # Remove indents from f-strings for readability
             asm = textwrap.dedent(asm)
 
             # Generic push logic
@@ -178,7 +180,9 @@ class CodeWriter(object):
             M=-M // y = negative y
             """
         else:
-            asm = f"""// Unimplemented arithmetic command: {vm_command}"""
+            raise NotImplementedError(
+                f"Unimplemented arithmetic command: {vm_command} at line {line_number}."
+            )
 
         return textwrap.dedent(
             asm
