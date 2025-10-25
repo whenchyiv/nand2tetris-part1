@@ -179,6 +179,83 @@ class CodeWriter(object):
             A=M-1 // Address one below the SP to get the value of y
             M=-M // y = negative y
             """
+        elif vm_command == "eq":
+            asm = """\
+            @SP // Stack pointer
+            M=M-1 // SP-- to value of y
+            A=M // Load the memory value of y (M = address of y)
+            D=M // Save the value of y in D
+            @SP // Stack pointer
+            M=M-1 // SP-- to value of x
+            A=M
+            D=D-M // Check for zero (equality) y = y -x
+            @EQUAL // Load the EQUAL memory address to A for the JEQ command if equal
+            D; JEQ // Jump to the A address if D (y) is zero (the values are equal)
+            (NOT_EQUAL)
+            D=0 // Twos compliment 00000000
+            @END // Load the END address to jump an skip the EQUAL section
+            0; JMP // Jump to the (END)
+            (EQUAL)
+            D=-1 // Twos compliment 11111111
+            (END)
+            @SP // Stack pointer
+            A=M  // Get address for the memory location at the top of the stack
+            M=D // Store the equality test to the top of the stack
+            @SP // Stack pointer
+            M=M+1 // SP++
+            """
+        elif vm_command == "gt":
+            asm = """\
+            @SP // Stack pointer
+            M=M-1 // SP-- to value of y
+            A=M // Load the memory value of y (M = address of y)
+            D=M // Save the value of y in D
+            @SP // Stack pointer
+            M=M-1 // SP-- to value of x
+            A=M // Load the value of x (M = address of x)
+            M=M-D // x = x - y
+            D=M // Store the result in D for a jump
+            @GREATER // Load the GREATER memory address to A for the JGT command
+            D; JGT // Jump to the A address if M (x) is greater than zero (the values are equal)
+            (LESSER)
+            D=0 // Twos compliment 00000000
+            @END // Load the END address to jump an skip the EQUAL section
+            0; JMP // Jump to the (END)
+            (GREATER)
+            D=-1 // Twos compliment 11111111
+            (END)
+            @SP // Stack pointer
+            A=M  // Get address for the memory location at the top of the stack
+            M=D // Store the equality test to the top of the stack
+            @SP // Stack pointer
+            M=M+1 // SP++
+            """
+        elif vm_command == "lt":
+            asm = """\
+            @SP // Stack pointer
+            M=M-1 // SP-- to value of y
+            A=M // Load the memory value of y (M = address of y)
+            D=M // Save the value of y in D
+            @SP // Stack pointer
+            M=M-1 // SP-- to value of x
+            A=M // Load the value of x (M = address of x)
+            M=M-D // x = x - y
+            D=M // Store the result in D for a jump
+            @LESSER // Load the GREATER memory address to A for the JLT command
+            D; JLT // Jump to the A address if M (x) is less than zero (the values are equal)
+            (GREATER)
+            D=0 // Twos compliment 00000000
+            @END // Load the END address to jump an skip the EQUAL section
+            0; JMP // Jump to the (END)
+            (LESSER)
+            D=-1 // Twos compliment 11111111
+            (END)
+            @SP // Stack pointer
+            A=M  // Get address for the memory location at the top of the stack
+            M=D // Store the equality test to the top of the stack
+            @SP // Stack pointer
+            M=M+1 // SP++
+            """
         else:
             raise NotImplementedError(
                 f"Unimplemented arithmetic command: {vm_command} at line {line_number}."
