@@ -44,14 +44,6 @@ class CodeWriter(object):
         self.vm_filename = vm_filename
         self._parser = Parser(self.vm_filename)
 
-    def _generate_push_asm(self, pointer: str) -> str:
-        """Generic push command generation for re-use."""
-        return asm
-
-    def _generate_pop_asm(self, pointer: str) -> str:
-        """Generic pop command generation for re-use."""
-        return asm
-
     def _write_pushpop(self, command: ParsedCommand, line_number: int) -> str:
         """Writes the push and pop assembly commands to the output file.
         Args:
@@ -77,24 +69,73 @@ class CodeWriter(object):
         asm: str = ""
         if command.command_type == self._command_types.push:
             # Push assembly generation
-            asm = f"""\
-            @{base_memory_address + memory_address_offset} // Memory segment {command.arg1} at address {base_memory_address} plus offset of {memory_address_offset}
-            D=M //  Store the value in the D register for addition to the stack
-            @SP // Stack pointer
-            A=M // Get current address for the top of the stack
-            M=D // Store the D value at the top of the stack
-            @SP // Stack pointer
+            if command.arg1 == "constant":
+                asm = f"""\
+                @{command.arg2} // Constant value
+                D=A // Store the value of the constant in D
+                """
+            elif command.arg1 in ["static", "temp"]:
+                asm = f"""\
+                @{base_memory_address + memory_address_offset} // {command.arg1.title()} memory segment {command.arg1} at address {base_memory_address + memory_address_offset}
+                D=M // Store the value in D
+                """
+            elif command.arg1 == "pointer":
+                asm = f"""\
+                @{base_memory_address + memory_address_offset} // {command.arg1.title()} memory segment {command.arg1} at address {base_memory_address + memory_address_offset}
+                D=M // Store the current value of the pointer in D
+                """
+            elif command.arg1 in ["this", "that", "local", "argument"]:
+                asm = f"""\
+                @{base_memory_address} // Memory segment {command.arg1} at address {base_memory_address}
+                D=M // Store the value of the base memory address (e.g. 300) into D
+                @{memory_address_offset} //  Offset passed as arugment position three stored as a constant
+                D=D+A // Offset the base memory address D by the constant value
+                A=D // Access the address to read the value stored at (D+A)
+                D=M // Store the value in D
+                """
+            else:
+                # Not implemented
+                raise NotImplementedError(
+                    f"Unimplimented {command.arg1} at line {line_number}."
+                )
+            # Push logic is the same for all commands
+            asm += """\
+            @SP // Proceed to push to the stack
+            A=M // Address at the top of the stack
+            M=D // Push the value in D to the stack memory location
+            @SP // Stack pointer incriment begin
             M=M+1 // SP++
             """
         elif command.command_type == self._command_types.pop:
             # Pop assembly generation
-            asm = f"""\
+            if command.arg1 in ["static", "temp"]:
+                asm = f"""\
+                @{base_memory_address + memory_address_offset} // {command.arg1.title()} memory segment {command.arg1} at address {base_memory_address + memory_address_offset}
+                D=A // Store the value in D
+                """
+            elif command.arg1 in ["this", "that", "local", "argument"]:
+                asm = f"""\
+                @{base_memory_address} // Memory segment {command.arg1} at address {base_memory_address}
+                D=M // Store the value of the base memory address (e.g. 300) into D
+                @{memory_address_offset} //  Offset passed as arugment position three stored as a constant
+                D=D+A // Offset the base memory address D by the constant value
+                """
+            elif command.arg1 == "pointer":
+                asm = f"""\
+                @{base_memory_address + memory_address_offset} // {command.arg1.title()} memory segment {command.arg1} at address {base_memory_address + memory_address_offset}
+                D=A // Set the D value to the current value of the pointer
+                """
+            # Generic push logic
+            asm += """\
+            @R13 // R13 temporary register
+            M=D // Store the offset address in R13
             @SP // Stack pointer
             M=M-1 // SP--
-            A=M // Get current address for the top of the stack
-            D=M // Store the value in the D register for addition to the stack
-            @{base_memory_address + memory_address_offset} // Memory segment {command.arg1} at address {base_memory_address} plus offset of {memory_address_offset}
-            M=D // Store the D value at the top of the stack
+            A=M // Access the current top of the stack
+            D=M // Get the value of the memory address at the top of the stack
+            @R13 // Back to R13 so we can pop the value off the stack to the offset memory address
+            A=M // Set our memory location to the offset address
+            M=D // Store the value from the top of the stack to that offset address
             """
         else:
             # Wtf? We should never get here.
@@ -127,7 +168,7 @@ class CodeWriter(object):
             @SP // Stack pointer
             M=M-1 //SP-- to value of  x
             A=M // Load the memory value of x (M = address of x)
-            M=M+D // M (x) = M (x) + D (y)
+            M=D+M // M (x) = M (x) + D (y)
             @SP // Stack pointer
             M=M+1 // SP++
             """

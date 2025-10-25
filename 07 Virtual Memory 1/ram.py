@@ -17,9 +17,11 @@ TEMP: list[int] = [x for x in range(5, 9)]
 R13: int = 13
 R14: int = 14
 R15: int = 15
+STATIC: int = 16
 NAMED_REGISTER_ADDRESSES: dict[str, int] = {
     "local": LCL,
     "argument": ARG,
+    "pointer": THIS,  # Pointer base is THIS
     "this": THIS,
     "that": THAT,
     "temp": TEMP[0],
@@ -27,6 +29,7 @@ NAMED_REGISTER_ADDRESSES: dict[str, int] = {
     "r13": R13,
     "r14": R14,
     "r15": R15,
+    "static": STATIC,
 }
 NAMED_REGISTER_NAMES: dict[str, str] = {
     "stackpointer": "SP",

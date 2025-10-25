@@ -6,6 +6,7 @@ Date: 2025-10-12
 
 from codewriter import CodeWriter
 import argparse
+import os
 
 
 if __name__ == "__main__":
@@ -34,7 +35,8 @@ if __name__ == "__main__":
     args = arg_parser.parse_args()
 
     if args.output:
-        if not args.output.endswith(".asm") or not args.output[0].isupper():
+        basename = os.path.basename(args.output)  # Check against VM filename specs
+        if not basename.endswith(".asm") or not basename[0].isupper():
             arg_parser.error(
                 "Output filename must be a .asm file and begin with an uppercase letter (e.g. FileName.asm)."
             )

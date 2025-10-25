@@ -7,5 +7,10 @@
 - [ ] write automated tests for full script (interpres.py)
 - [ ] codewriter module
     - [x] fix codewriter poppush module based on spec on p. 186; not currently right
-    - [ ] arithmetic asm generation
+    - [x] fix push pop logic to use the values at the pointer addresses and not overwrite the pointers (duh).
+    - [x] fix push pop logic so that it handles different segments correctly.
+    - [x] arithmetic asm generation
+        - [x] fix sub logic.
+        - [ ] add comparison commands
+        - [ ] add logical commands
 - [x] Create main script that calls into the codewriter and runs the whole thing (interpres.py)
