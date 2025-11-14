@@ -14,6 +14,7 @@ class CodeWriter(object):
     output_filename: str
     _parser: Parser
     _command_types: CommandTypes = CommandTypes()
+    _current_function: str | None = None
 
     def __init__(self, vm_filename: str, output_filename: str):
         print(
@@ -27,6 +28,7 @@ class CodeWriter(object):
         """Writes the push and pop assembly commands to the output file.
         Args:
             command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
+            line_number (int): The line number of the current command in the .vm file.
         """
         try:
             base_memory_address: int = ram.NAMED_REGISTER_ADDRESSES[
@@ -141,6 +143,7 @@ class CodeWriter(object):
         """Writes the arithmetic assembly commands to the output file.
         Args:
             command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
+            line_number (int): The line number of the current command in the .vm file.
         """
         vm_command: str | None = command.arg1
         if not vm_command:
@@ -154,7 +157,7 @@ class CodeWriter(object):
             @SP // Stack pointer
             M=M-1 // SP-- to value of y
             A=M // Load the memory value of y (M = address of y)
-            D=M // D register = y 
+            D=M // D register = y
             @SP // Stack pointer
             M=M-1 //SP-- to value of  x
             A=M // Load the memory value of x (M = address of x)
@@ -167,7 +170,7 @@ class CodeWriter(object):
             @SP // Stack pointer
             M=M-1 // SP-- to value of y
             A=M // Load the memory value of y (M = address of y)
-            D=M // D register = y 
+            D=M // D register = y
             @SP // Stack pointer
             M=M-1 //SP-- to value of  x
             A=M // Load the memory value of x (M = address of x)
@@ -300,6 +303,22 @@ class CodeWriter(object):
             asm
         )  # remove indentation in strings added for code readability
 
+    def _write_label(self, command: ParsedCommand, line_number: int) -> str:
+        """
+        Writes the label command asm to the output file, with an optional function name
+        if a function call was encountered prior to the label call.
+        Args:
+            command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
+            line_number (int): The line number of the current command in the .vm file.
+        """
+        asm: str = "("
+        if self._current_function:
+            asm += f"{self._current_function}$"
+        asm += f"{command.arg1})\n"
+        return textwrap.dedent(
+            asm
+        )  # remove indentation in strings added for code readability
+
     def write(self, debug: bool = True):
         """Writes the entire .vm file to the output file.
         Args:
@@ -322,6 +341,8 @@ class CodeWriter(object):
                     file.write(self._write_pushpop(line, line_count))
                 elif line.command_type == self._command_types.arithmetic:
                     file.write(self._write_arithmetic(line, line_count))
+                elif line.command_type == self._command_types.label:
+                    file.write(self._write_label(line, line_count))
                 else:
                     file.write(f"{line.command_type}: {line.arg1} {line.arg2}\n")
                 if debug:
