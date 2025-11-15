@@ -304,7 +304,7 @@ class CodeWriter(object):
             asm
         )  # remove indentation in strings added for code readability
 
-    def _label_string(self, command: ParsedCommand) -> str:
+    def _label_string(self, command: ParsedCommand, line_number: int) -> str:
         """
         Creates a hack assembly label string based on the provided command and any function name
         if a function call was encountered prior to the label call.
@@ -314,10 +314,11 @@ class CodeWriter(object):
         Args:
             command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
         """
-        asm: str = ""
-        if self._current_function:
-            asm += f"{self._current_function}$"
-        asm += f"{command.arg1}"
+        func: str | None = self._current_function
+        name: str | None = command.arg1
+        if not name:
+            raise ValueError(f"Invalid label name: {name} at line {line_number}.")
+        asm: str = f"{func}${name}" if func else name
         return textwrap.dedent(
             asm
         )  # remove indentation in strings added for code readability
@@ -330,7 +331,7 @@ class CodeWriter(object):
             command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
             line_number (int): The line number of the current command in the .vm file.
         """
-        return f"({self._label_string(command)}) // Label for {command.arg1}\n"
+        return f"({self._label_string(command, line_number)}) // Label for {command.arg1}\n"
 
     def _write_goto(self, command: ParsedCommand, line_number: int) -> str:
         """
@@ -341,7 +342,7 @@ class CodeWriter(object):
         """
         return textwrap.dedent(
             f"""\
-            @{self._label_string(command)} // Get the label address for {command.arg1}
+            @{self._label_string(command, line_number)} // Get the label address for {command.arg1}
             0;JMP // Jump to the {command.arg1} label
             """
         )
@@ -359,7 +360,7 @@ class CodeWriter(object):
             M=M-1 // Decrement stack pointer
             A=M // Load the address of the top value
             D=M // Load the value at the top of the stack
-            @{self._label_string(command)} // Get the label address for {command.arg1}
+            @{self._label_string(command, line_number)} // Get the label address for {command.arg1}
             D;JNE // Jump to the {command.arg1} label if the value is not zero
             """
         )
