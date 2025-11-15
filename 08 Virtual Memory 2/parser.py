@@ -11,9 +11,9 @@ Date: 2025-10-12
 """
 
 import argparse
+import os
 from dataclasses import dataclass
 from textwrap import dedent
-import os
 
 
 @dataclass
@@ -29,7 +29,7 @@ class CommandTypes:
     call: str = "C_CALL"
     label: str = "C_LABEL"
     goto: str = "C_GOTO"
-    iff: str = "C_IF"
+    if_goto: str = "C_IF"
 
 
 @dataclass
@@ -78,7 +78,7 @@ class Parser(object):
         "not": _command_types.arithmetic,
         "label": _command_types.label,
         "goto": _command_types.goto,
-        "if-goto": _command_types.iff,
+        "if-goto": _command_types.if_goto,
     }
 
     def __init__(self, filename: str | None):
@@ -195,7 +195,9 @@ class Parser(object):
                 if (
                     len(stripped_line) > 0 and line[:2] != "//"
                 ):  # Ignore blank lines and comments (lines that start with "//")
-                    stripped_line = stripped_line.split("//")[0].strip()  # Strip out comments from the line itself
+                    stripped_line = stripped_line.split("//")[
+                        0
+                    ].strip()  # Strip out comments from the line itself
                     self.lines.append(stripped_line)
             self.lines = [dedent(line.strip()) for line in self.lines]
             self.total_lines = len(self.lines)
