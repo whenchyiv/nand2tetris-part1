@@ -27,6 +27,11 @@ class CodeWriter(object):
 
     def _write_pushpop(self, command: ParsedCommand, line_number: int) -> str:
         """Writes the push and pop assembly commands to the output file.
+
+        *Note:* Yes, we call textwrap.dedent() many times in this function, and it seems redundent. However, the multiple calls
+        are necessary to fully de-indent the asm strings due to the varying levels of indentation used in the code here for readability.
+        Yes, it is a perf issue and not ideal. However, given this is an academic exercise, we prioritize readability over performance.
+
         Args:
             command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
             line_number (int): The line number of the current command in the .vm file.
