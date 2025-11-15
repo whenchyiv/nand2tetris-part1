@@ -342,7 +342,8 @@ class CodeWriter(object):
         return textwrap.dedent(
             f"""\
             @{self._label_string(command)} // Get the label address for {command.arg1}
-            0;JMP // Jump to the {command.arg1} label"""
+            0;JMP // Jump to the {command.arg1} label
+            """
         )
 
     def _write_if_goto(self, command: ParsedCommand, line_number: int) -> str:
