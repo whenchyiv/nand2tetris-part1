@@ -4,9 +4,10 @@ Author: Will Henchy
 Date: 2025-10-12
 """
 
-from parser import Parser, ParsedCommand, CommandTypes
-import ram
 import textwrap
+
+import ram
+from parser import CommandTypes, ParsedCommand, Parser
 
 
 class CodeWriter(object):
@@ -303,6 +304,24 @@ class CodeWriter(object):
             asm
         )  # remove indentation in strings added for code readability
 
+    def _label_string(self, command: ParsedCommand) -> str:
+        """
+        Creates a hack assembly label string based on the provided command and any function name
+        if a function call was encountered prior to the label call.
+
+        Used in functions that need to write a label that includes the current function name.
+
+        Args:
+            command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
+        """
+        asm: str = ""
+        if self._current_function:
+            asm += f"{self._current_function}$"
+        asm += f"{command.arg1}"
+        return textwrap.dedent(
+            asm
+        )  # remove indentation in strings added for code readability
+
     def _write_label(self, command: ParsedCommand, line_number: int) -> str:
         """
         Writes the label command asm to the output file, with an optional function name
@@ -311,13 +330,19 @@ class CodeWriter(object):
             command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
             line_number (int): The line number of the current command in the .vm file.
         """
-        asm: str = "("
-        if self._current_function:
-            asm += f"{self._current_function}$"
-        asm += f"{command.arg1})\n"
+        return f"({self._label_string(command)}) // Label for {command.arg1}\n"
+
+    def _write_goto(self, command: ParsedCommand, line_number: int) -> str:
+        """
+        Writes the goto command asm to the output file.
+        Args:
+            command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
+            line_number (int): The line number of the current command in the .vm file.
+        """
         return textwrap.dedent(
-            asm
-        )  # remove indentation in strings added for code readability
+            f"""@{self._label_string(command)} // Get the label address for {command.arg1}
+            0;JMP // Jump to the {command.arg1} label"""
+        )
 
     def write(self, debug: bool = True):
         """Writes the entire .vm file to the output file.
@@ -343,6 +368,8 @@ class CodeWriter(object):
                     file.write(self._write_arithmetic(line, line_count))
                 elif line.command_type == self._command_types.label:
                     file.write(self._write_label(line, line_count))
+                elif line.command_type == self._command_types.goto:
+                    file.write(self._write_goto(line, line_count))
                 else:
                     file.write(f"{line.command_type}: {line.arg1} {line.arg2}\n")
                 if debug:
