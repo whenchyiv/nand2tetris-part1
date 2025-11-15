@@ -138,6 +138,9 @@ class CodeWriter(object):
             )
         asm = textwrap.dedent(asm)
 
+        if len(asm) == 0:
+            raise ValueError(f"Invalid assembly code: {asm} at line {line_number}.")
+
         return asm
 
     def _write_arithmetic(self, command: ParsedCommand, line_number: int) -> str:
@@ -299,6 +302,9 @@ class CodeWriter(object):
             raise NotImplementedError(
                 f"Unimplemented arithmetic command: {vm_command} at line {line_number}u."
             )
+
+        if len(asm) == 0:
+            raise ValueError(f"Invalid assembly code: {asm} at line {line_number}.")
 
         return textwrap.dedent(
             asm
