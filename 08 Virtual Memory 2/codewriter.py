@@ -307,7 +307,7 @@ class CodeWriter(object):
     def _label_string(self, command: ParsedCommand, line_number: int) -> str:
         """
         Creates a hack assembly label string based on the provided command and any function name
-        if a function call was encountered prior to the label call.
+        if a function call was encountered prior to the label call (set at self._current_function).
 
         Used in functions that need to write a label that includes the current function name.
 
@@ -318,9 +318,8 @@ class CodeWriter(object):
         name: str | None = command.arg1
         if not name:
             raise ValueError(f"Invalid label name: {name} at line {line_number}.")
-        asm: str = f"{func}${name}" if func else name
         return textwrap.dedent(
-            asm
+            f"{func}${name}" if func else name
         )  # remove indentation in strings added for code readability
 
     def _write_label(self, command: ParsedCommand, line_number: int) -> str:
