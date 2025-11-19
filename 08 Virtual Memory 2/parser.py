@@ -30,6 +30,8 @@ class CommandTypes:
     label: str = "C_LABEL"
     goto: str = "C_GOTO"
     if_goto: str = "C_IF"
+    function: str = "C_FUNCTION"
+    return_: str = "C_RETURN"
 
 
 @dataclass
@@ -79,6 +81,8 @@ class Parser(object):
         "label": _command_types.label,
         "goto": _command_types.goto,
         "if-goto": _command_types.if_goto,
+        "function": _command_types.function,
+        "return": _command_types.return_,
     }
 
     def __init__(self, filename: str | None):

@@ -385,7 +385,7 @@ class CodeWriter(object):
         line_count: int = 0
         with open(self.output_filename, "w") as file:
             file.write(
-                f"// {self.vm_filename.split('/')[-1]} translated to Hack assembly by Interpres\n"
+                f"// {self.vm_filename.split('/')[-1]} translated to the Hack assembly language from the book The Elements of Computing systems using the Interpres translator.\n// Interpres by Will Henchy, 2025.\n\n"
             )  # Include the filename in the output file (and split out any path information)
             for line, token_list in self._parser:
                 if debug:  # Include VM tokens as a comment for debugging if requested via the debug var.
