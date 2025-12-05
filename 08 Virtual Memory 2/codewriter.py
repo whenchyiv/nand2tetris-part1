@@ -375,6 +375,76 @@ class CodeWriter(object):
             """
         )
 
+    def _write_call(self, command: ParsedCommand, line_number: int) -> str:
+        """
+        Writes the call command, saving the caller's frame and repositioning the stack pointer to begin
+        the function call.
+        Args:
+            command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
+            line_number (int): The line number of the current command in the .vm file.
+        """
+        return_label: str = f"RETURN.{command.arg1}{command.arg2}{line_number}"
+        asm: str = f"""\
+            // Set up the return address for the function call {command.arg1}
+            @({return_label}) // Push the return address onto the stack
+            D=A
+            @SP
+            A=M
+            M=D
+            @SP // Increment the SP
+            M=M+1
+            // Save the caller's frame
+            @{ram.NAMED_REGISTER_ADDRESSES["local"]} // LCL's base memory address
+            D=M
+            @SP
+            A=M
+            M=D // Push LCL's address on onto the stack
+            @SP // Increment the SP
+            M=M+1
+            @{ram.NAMED_REGISTER_ADDRESSES["arguments"]} // ARG's base memory address
+            D=M
+            @SP
+            A=M
+            M=D // Push ARG's address on onto the stack
+            @SP // Increment the SP
+            M=M+1
+            @{ram.NAMED_REGISTER_ADDRESSES["this"]} // THIS's base memory address
+            D=M
+            @SP
+            A=M
+            M=D // Push THIS's address on onto the stack
+            @SP // Increment the SP
+            M=M+1
+            @{ram.NAMED_REGISTER_ADDRESSES["that"]} // THAT's base memory address
+            D=M
+            @SP
+            A=M
+            M=D // Push THAT's address on onto the stack
+            @SP // Increment the SP
+            M=M+1
+            // Reposition ARG to SP - 5 - nargs
+            @SP
+            D=M
+            @5
+            D=D-A
+            @{command.arg2}
+            D=D-A
+            @{ram.NAMED_REGISTER_ADDRESSES["arguments"]} // ARG's base memory address
+            M=D
+            // Reposition LCL to SP
+            @SP
+            A=M
+            D=A
+            @{ram.NAMED_REGISTER_ADDRESSES["local"]} // LCL's base address
+            M=D
+            // Call the function {command.arg2}
+            @{self._label_string(command, line_number)} // Get the label address to call {command.arg2}
+            0;JMP // Jump!
+            // Mark our return address for the {command.arg2} function return
+            ({return_label})  // Label for the return address
+        """
+        return textwrap.dedent(asm)
+
     def write(self, debug: bool = True):
         """Writes the entire .vm file to the output file.
         Args:
@@ -403,6 +473,8 @@ class CodeWriter(object):
                     file.write(self._write_goto(line, line_count))
                 elif line.command_type == self._command_types.if_goto:
                     file.write(self._write_if_goto(line, line_count))
+                elif line.command_type == self._command_types.call:
+                    file.write(self._write_call(line, line_count))
                 else:
                     file.write(f"{line.command_type}: {line.arg1} {line.arg2}\n")
                 if debug:

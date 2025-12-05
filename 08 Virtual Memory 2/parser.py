@@ -24,14 +24,12 @@ class CommandTypes:
     push: str = "C_PUSH"
     pop: str = "C_POP"
     arithmetic: str = "C_ARITHMETIC"
-    rtrn: str = "C_RETURN"
-    function: str = "C_FUNCTION"
     call: str = "C_CALL"
     label: str = "C_LABEL"
     goto: str = "C_GOTO"
     if_goto: str = "C_IF"
     function: str = "C_FUNCTION"
-    return_: str = "C_RETURN"
+    _return: str = "C_RETURN"
 
 
 @dataclass
@@ -82,7 +80,7 @@ class Parser(object):
         "goto": _command_types.goto,
         "if-goto": _command_types.if_goto,
         "function": _command_types.function,
-        "return": _command_types.return_,
+        "return": _command_types._return,
     }
 
     def __init__(self, filename: str | None):
