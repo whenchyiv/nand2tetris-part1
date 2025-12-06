@@ -134,7 +134,7 @@ class Parser(object):
         """Return the first argument for the current command.
         If the command is a Return command, returns None instead."""
         try:
-            if self._command_type == self._command_types.rtrn:
+            if self._command_type == self._command_types._return:
                 return None
             elif self._command_type == self._command_types.arithmetic:
                 return self._line_tokens[0]
