@@ -509,6 +509,8 @@ class CodeWriter(object):
                     file.write(self._write_goto(line, line_count))
                 elif line.command_type == self._command_types.if_goto:
                     file.write(self._write_if_goto(line, line_count))
+                elif line.command_type == self._command_types.function:
+                    file.write(self._write_function(line, line_count))
                 elif line.command_type == self._command_types.call:
                     file.write(self._write_call(line, line_count))
                 else:
