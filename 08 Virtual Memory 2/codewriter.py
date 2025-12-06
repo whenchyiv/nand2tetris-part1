@@ -375,6 +375,42 @@ class CodeWriter(object):
             """
         )
 
+    def _write_function(self, command: ParsedCommand, line_number: int) -> str:
+        """
+        Writes a function to the asm.
+        Args:
+            command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
+            line_number (int): The line number of the current command in the .vm file.
+        """
+        # Check if arg2 (nVars) exists before we proceed.
+        if not command.arg2:
+            raise ValueError(
+                f"Error: Missing nVars for function {command.arg1} at line {line_number}"
+            )
+
+        asm: str = f"/ Function {command.arg1}\n({command.arg1})\n"
+        asm = textwrap.dedent(asm)
+        try:
+            nVars = int(command.arg2)
+        except:
+            raise ValueError(
+                f"Error: Invalid nVars {command.arg2} for function command {command.arg1} at line {line_number}"
+            )
+
+        for a in range(nVars):
+            asm += textwrap.dedent(f"""\
+                // Set arg{a} to 0
+                @0
+                D=A
+                @SP
+                A=M
+                M=D
+                // Increment SP
+                @SP
+                M=M+1
+            """)
+        return asm
+
     def _write_call(self, command: ParsedCommand, line_number: int) -> str:
         """
         Writes the call command, saving the caller's frame and repositioning the stack pointer to begin
