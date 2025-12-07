@@ -16,6 +16,7 @@ class CodeWriter(object):
     _parser: Parser
     _command_types: CommandTypes = CommandTypes()
     _current_function: str | None = None
+    _return_address: str | None = None
 
     def __init__(self, vm_filename: str, output_filename: str):
         print(
@@ -388,7 +389,7 @@ class CodeWriter(object):
                 f"Error: Missing nVars for function {command.arg1} at line {line_number}"
             )
 
-        asm: str = f"/ Function {command.arg1}\n({command.arg1})\n"
+        asm: str = f"// Function {command.arg1}\n({command.arg1})\n"
         asm = textwrap.dedent(asm)
         try:
             nVars = int(command.arg2)
@@ -481,6 +482,76 @@ class CodeWriter(object):
         """
         return textwrap.dedent(asm)
 
+    def _write_return(self, command: ParsedCommand, line_number: int) -> str:
+        asm = f"""\
+        // Store the old local in R14
+        @{ram.NAMED_REGISTER_ADDRESSES["local"]}
+        D=M
+        @{ram.NAMED_REGISTER_ADDRESSES["r14"]}
+        M=D
+        // R15 = *(endframe - 5)
+        @{ram.NAMED_REGISTER_ADDRESSES["r15"]}
+        M=D
+        @5
+        D=A
+        @{ram.NAMED_REGISTER_ADDRESSES["r15"]}
+        M=M-D
+        A=M
+        D=M
+        @{ram.NAMED_REGISTER_ADDRESSES["r15"]}
+        M=D
+        // *ARG = pop()
+        @SP
+        M=M-1
+        A=M
+        D=M
+        @{ram.NAMED_REGISTER_ADDRESSES["argument"]}
+        A=M
+        M=D
+        // SP = ARG  + 1
+        @{ram.NAMED_REGISTER_ADDRESSES["argument"]}
+        D=M
+        @SP
+        M=D+1
+        // Restore THAT
+        @{ram.NAMED_REGISTER_ADDRESSES["r14"]}
+        D=M
+        @1
+        A=D-A
+        D=M
+        @{ram.NAMED_REGISTER_ADDRESSES["that"]}
+        M=D
+        // Restore THIS
+        @{ram.NAMED_REGISTER_ADDRESSES["r14"]}
+        D=M
+        @2
+        A=D-A
+        D=M
+        @{ram.NAMED_REGISTER_ADDRESSES["this"]}
+        M=D
+        // Restore ARG
+        @{ram.NAMED_REGISTER_ADDRESSES["r14"]}
+        D=M
+        @3
+        A=D-A
+        D=M
+        @{ram.NAMED_REGISTER_ADDRESSES["argument"]}
+        M=D
+        // Restore LCL
+        @{ram.NAMED_REGISTER_ADDRESSES["r14"]}
+        D=M
+        @4
+        A=D-A
+        D=M
+        @{ram.NAMED_REGISTER_ADDRESSES["local"]}
+        M=D
+        // Return to caller
+        @{ram.NAMED_REGISTER_ADDRESSES["r15"]}
+        A=M
+        0;JMP
+        """
+        return textwrap.dedent(asm)
+
     def write(self, debug: bool = True):
         """Writes the entire .vm file to the output file.
         Args:
@@ -513,6 +584,8 @@ class CodeWriter(object):
                     file.write(self._write_function(line, line_count))
                 elif line.command_type == self._command_types.call:
                     file.write(self._write_call(line, line_count))
+                elif line.command_type == self._command_types._return:
+                    file.write(self._write_return(line, line_count))
                 else:
                     file.write(f"{line.command_type}: {line.arg1} {line.arg2}\n")
                 if debug:
