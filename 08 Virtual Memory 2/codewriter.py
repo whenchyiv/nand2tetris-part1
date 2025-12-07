@@ -483,6 +483,12 @@ class CodeWriter(object):
         return textwrap.dedent(asm)
 
     def _write_return(self, command: ParsedCommand, line_number: int) -> str:
+        """
+        Writes the return command, restoring the caller and jumping back to the return address.
+        Args:
+            command (ParsedCommand): The ParsedCommand object representing the current line in the .vm file.
+            line_number (int): The line number of the current command in the .vm file.
+        """
         asm = f"""\
         // Store the old local in R14
         @{ram.NAMED_REGISTER_ADDRESSES["local"]}
