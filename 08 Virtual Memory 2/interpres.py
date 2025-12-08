@@ -46,10 +46,16 @@ if __name__ == "__main__":
     if not is_directory:
         code_writer.set_filename(args.input)
         code_writer.write(debug=args.debug)
+        print(f"Successfully wrote {args.input} to {args.output}.")
     else:
+        vm_file_count = 0  # We will ignore non-.vm files.
         for idx, filename in enumerate(os.listdir(args.input)):
-            write_bootstrap = idx == 0  # Only write the bootstrap code once
             if filename.endswith(".vm"):
+                initialize_file = (
+                    vm_file_count == 0
+                )  # Only initialize on the first vm file, otherwise False
                 file_path = f"{args.input}/{filename}"
                 code_writer.set_filename(file_path)
-                code_writer.write(write_bootstrap=write_bootstrap, debug=args.debug)
+                code_writer.write(initialize=initialize_file, debug=args.debug)
+                vm_file_count += 1
+        print(f"Successfully wrote {vm_file_count} VM files to {args.output}.")

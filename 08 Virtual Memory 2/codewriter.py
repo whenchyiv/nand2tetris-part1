@@ -17,6 +17,7 @@ class CodeWriter(object):
     _command_types: CommandTypes = CommandTypes()
     _current_function: str | None = None
     _return_address: str | None = None
+    _line_count: int = 0
 
     def __init__(self, output_filename: str):
         print(f"Initializing CodeWriter with output file {output_filename}...")
@@ -396,7 +397,7 @@ class CodeWriter(object):
                 f"Error: Missing nVars for function {command.arg1} at line {line_number}"
             )
 
-        asm: str = f"// Function {command.arg1}\n({command.arg1})\n"
+        asm: str = f"// Function {command.arg1}\n({self._label_string(command, line_number)})\n"
         asm = textwrap.dedent(asm)
         try:
             nVars = int(command.arg2)
@@ -430,7 +431,7 @@ class CodeWriter(object):
         return_label: str = f"RETURN.{command.arg1}{command.arg2}{line_number}"
         asm: str = f"""\
             // Set up the return address for the function call {command.arg1}
-            @{return_label} // Push the return address onto the stack
+            @{return_label} // Push the return address onto the stack (return_label)
             D=A
             @SP
             A=M
@@ -485,7 +486,7 @@ class CodeWriter(object):
             @{self._label_string(command, line_number)} // Get the label address to call {command.arg2}
             0;JMP // Jump!
             // Mark our return address for the {command.arg2} function return
-            ({return_label})  // Label for the return address
+            ({return_label})  // Label for the return address (return_label)
         """
         return textwrap.dedent(asm)
 
@@ -565,7 +566,7 @@ class CodeWriter(object):
         """
         return textwrap.dedent(asm)
 
-    def write(self, write_bootstrap: bool = True, debug: bool = True):
+    def write(self, initialize: bool = True, debug: bool = True):
         """Writes the entire .vm file to the output file.
         Args:
             write_init (bool): If True, write the bootstrap code.
@@ -576,9 +577,11 @@ class CodeWriter(object):
         if not self._parser:
             raise ValueError("Parser not set. Call set_filename() before writing.")
 
-        line_count: int = 0
-        with open(self.output_filename, "w") as file:
-            if write_bootstrap:
+        write_mode = (
+            "w" if initialize else "a"
+        )  # Either write a new file if this is the first write, or append to the existing file
+        with open(self.output_filename, write_mode) as file:
+            if initialize:
                 print("Writing bootstrap code...")
                 file.write(
                     f"// {self.vm_filename.split('/')[-1]} translated to the Hack assembly language from the book The Elements of Computing systems using the Interpres translator.\n// Interpres by Will Henchy, 2025.\n\n"
@@ -589,11 +592,12 @@ class CodeWriter(object):
                     @256 // Set the SP to 256
                     D=A
                     @SP
-                    A=0
                     M=D
                 """
                 file.write(textwrap.dedent(bootstrap_asm))
-                file.write(self._write_call(ParsedCommand("C_CALL", "Sys.init 0"), 0))
+                file.write(
+                    self._write_call(ParsedCommand("C_CALL", "Sys.init", "0"), 0)
+                )
             # Walk file and write lines
             print(f"Writing {self.vm_filename.split('/')[-1]}...")
             for line, token_list in self._parser:
@@ -603,25 +607,27 @@ class CodeWriter(object):
                     line.command_type == self._command_types.push
                     or line.command_type == self._command_types.pop
                 ):
-                    file.write(self._write_pushpop(line, line_count))
+                    file.write(self._write_pushpop(line, self._line_count))
                 elif line.command_type == self._command_types.arithmetic:
-                    file.write(self._write_arithmetic(line, line_count))
+                    file.write(self._write_arithmetic(line, self._line_count))
                 elif line.command_type == self._command_types.label:
-                    file.write(self._write_label(line, line_count))
+                    file.write(self._write_label(line, self._line_count))
                 elif line.command_type == self._command_types.goto:
-                    file.write(self._write_goto(line, line_count))
+                    file.write(self._write_goto(line, self._line_count))
                 elif line.command_type == self._command_types.if_goto:
-                    file.write(self._write_if_goto(line, line_count))
+                    file.write(self._write_if_goto(line, self._line_count))
                 elif line.command_type == self._command_types.function:
-                    file.write(self._write_function(line, line_count))
+                    file.write(self._write_function(line, self._line_count))
                 elif line.command_type == self._command_types.call:
-                    file.write(self._write_call(line, line_count))
+                    file.write(self._write_call(line, self._line_count))
                 elif line.command_type == self._command_types._return:
-                    file.write(self._write_return(line, line_count))
+                    file.write(self._write_return(line, self._line_count))
                 else:
                     file.write(f"{line.command_type}: {line.arg1} {line.arg2}\n")
                 if debug:
                     file.write("\n")  # Extra whitespace for readability
-                line_count += 1
+                self._line_count += 1
 
-        print(f"Successfully wrote {line_count} lines to {self.output_filename}.")
+        print(
+            f"Successfully wrote to line {self._line_count} in {self.output_filename}."
+        )

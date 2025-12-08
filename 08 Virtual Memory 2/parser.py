@@ -60,8 +60,6 @@ class Parser(object):
     """
 
     filename: str
-    lines: list[str] = list()
-    current_line: int = -1  # Defaulting to -1 allows us to advance() before parsing, so we actually start on line 0 and also parse the final line.
     total_lines: int = 0
     _command_types: CommandTypes = CommandTypes()
     _commands: dict[str, str] = {
@@ -97,6 +95,8 @@ class Parser(object):
             )
 
         # Load and parse the vm file
+        self.lines: list[str] = list()
+        self.current_line: int = -1  # Defaulting to -1 allows us to advance() before parsing, so we actually start on line 0 and also parse the final line.
         self.filename = filename
         self._load_lines()
 
