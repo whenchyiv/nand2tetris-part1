@@ -579,6 +579,7 @@ class CodeWriter(object):
         line_count: int = 0
         with open(self.output_filename, "w") as file:
             if write_bootstrap:
+                print("Writing bootstrap code...")
                 file.write(
                     f"// {self.vm_filename.split('/')[-1]} translated to the Hack assembly language from the book The Elements of Computing systems using the Interpres translator.\n// Interpres by Will Henchy, 2025.\n\n"
                 )  # Include the filename in the output file (and split out any path information)
@@ -592,8 +593,9 @@ class CodeWriter(object):
                     M=D
                 """
                 file.write(textwrap.dedent(bootstrap_asm))
-                self._write_call(ParsedCommand("C_CALL", "Sys.init 0"), 0)
+                file.write(self._write_call(ParsedCommand("C_CALL", "Sys.init 0"), 0))
             # Walk file and write lines
+            print(f"Writing {self.vm_filename.split('/')[-1]}...")
             for line, token_list in self._parser:
                 if debug:  # Include VM tokens as a comment for debugging if requested via the debug var.
                     file.write(f"//{' '.join(token_list)}\n")
