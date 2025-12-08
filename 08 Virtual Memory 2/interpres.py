@@ -41,5 +41,15 @@ if __name__ == "__main__":
                 "Output filename must be a .asm file and begin with an uppercase letter (e.g. FileName.asm)."
             )
 
-    code_writer = CodeWriter(args.input, args.output)
-    code_writer.write(debug=args.debug)
+    is_directory = os.path.isdir(args.input)
+    code_writer = CodeWriter(args.output)
+    if not is_directory:
+        code_writer.set_filename(args.input)
+        code_writer.write(debug=args.debug)
+    else:
+        for idx, filename in enumerate(os.listdir(args.input)):
+            write_bootstrap = idx == 0  # Only write the bootstrap code once
+            if filename.endswith(".vm"):
+                file_path = f"{args.input}/{filename}"
+                code_writer.set_filename(file_path)
+                code_writer.write(write_bootstrap=write_bootstrap, debug=args.debug)

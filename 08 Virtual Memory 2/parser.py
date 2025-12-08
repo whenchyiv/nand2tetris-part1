@@ -80,6 +80,7 @@ class Parser(object):
         "goto": _command_types.goto,
         "if-goto": _command_types.if_goto,
         "function": _command_types.function,
+        "call": _command_types.call,
         "return": _command_types._return,
     }
 

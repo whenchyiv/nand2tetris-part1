@@ -18,11 +18,18 @@ class CodeWriter(object):
     _current_function: str | None = None
     _return_address: str | None = None
 
-    def __init__(self, vm_filename: str, output_filename: str):
-        print(
-            f"Initializing CodeWriter with input file {vm_filename} and output file {output_filename}..."
-        )
+    def __init__(self, output_filename: str):
+        print(f"Initializing CodeWriter with output file {output_filename}...")
         self.output_filename = output_filename
+
+    def set_filename(self, vm_filename: str):
+        """
+        Sets the filename for the CodeWriter object and creates a parser. Required to be called before writing.
+        Args:
+            vm_filename (str): The filename of the .vm file to be processed.
+                Must be CamelCase and end in .vm (e.g. ProgFile.vm).
+        """
+        print(f"Parsing file: {vm_filename}...")
         self.vm_filename = vm_filename
         self._parser = Parser(self.vm_filename)
 
@@ -423,7 +430,7 @@ class CodeWriter(object):
         return_label: str = f"RETURN.{command.arg1}{command.arg2}{line_number}"
         asm: str = f"""\
             // Set up the return address for the function call {command.arg1}
-            @({return_label}) // Push the return address onto the stack
+            @{return_label} // Push the return address onto the stack
             D=A
             @SP
             A=M
@@ -438,7 +445,7 @@ class CodeWriter(object):
             M=D // Push LCL's address on onto the stack
             @SP // Increment the SP
             M=M+1
-            @{ram.NAMED_REGISTER_ADDRESSES["arguments"]} // ARG's base memory address
+            @{ram.NAMED_REGISTER_ADDRESSES["argument"]} // ARG's base memory address
             D=M
             @SP
             A=M
@@ -466,7 +473,7 @@ class CodeWriter(object):
             D=D-A
             @{command.arg2}
             D=D-A
-            @{ram.NAMED_REGISTER_ADDRESSES["arguments"]} // ARG's base memory address
+            @{ram.NAMED_REGISTER_ADDRESSES["argument"]} // ARG's base memory address
             M=D
             // Reposition LCL to SP
             @SP
@@ -558,18 +565,36 @@ class CodeWriter(object):
         """
         return textwrap.dedent(asm)
 
-    def write(self, debug: bool = True):
+    def write(self, write_bootstrap: bool = True, debug: bool = True):
         """Writes the entire .vm file to the output file.
         Args:
+            write_init (bool): If True, write the bootstrap code.
             debug (bool): If True, include VM tokens as comments in the output file.
         """
         print(f"Parsing {self.vm_filename}...")
 
+        if not self._parser:
+            raise ValueError("Parser not set. Call set_filename() before writing.")
+
         line_count: int = 0
         with open(self.output_filename, "w") as file:
-            file.write(
-                f"// {self.vm_filename.split('/')[-1]} translated to the Hack assembly language from the book The Elements of Computing systems using the Interpres translator.\n// Interpres by Will Henchy, 2025.\n\n"
-            )  # Include the filename in the output file (and split out any path information)
+            if write_bootstrap:
+                file.write(
+                    f"// {self.vm_filename.split('/')[-1]} translated to the Hack assembly language from the book The Elements of Computing systems using the Interpres translator.\n// Interpres by Will Henchy, 2025.\n\n"
+                )  # Include the filename in the output file (and split out any path information)
+                # Bootstrap code
+                bootstrap_asm: str = """\
+                    // Bootstrap code
+                    @256 // Set the SP to 256
+                    D=A
+                    @SP
+                    A=M
+                    M=D
+                    @(Sys.init) // Call Sys.init, which calls Main.main
+                    0;JMP
+                """
+                file.write(textwrap.dedent(bootstrap_asm))
+            # Walk file and write lines
             for line, token_list in self._parser:
                 if debug:  # Include VM tokens as a comment for debugging if requested via the debug var.
                     file.write(f"//{' '.join(token_list)}\n")
