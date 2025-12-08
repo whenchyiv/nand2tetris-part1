@@ -588,12 +588,11 @@ class CodeWriter(object):
                     @256 // Set the SP to 256
                     D=A
                     @SP
-                    A=M
+                    A=0
                     M=D
-                    @(Sys.init) // Call Sys.init, which calls Main.main
-                    0;JMP
                 """
                 file.write(textwrap.dedent(bootstrap_asm))
+                self._write_call(ParsedCommand("C_CALL", "Sys.init 0"), 0)
             # Walk file and write lines
             for line, token_list in self._parser:
                 if debug:  # Include VM tokens as a comment for debugging if requested via the debug var.
